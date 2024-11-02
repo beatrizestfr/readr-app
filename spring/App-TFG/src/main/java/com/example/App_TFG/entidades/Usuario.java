@@ -10,40 +10,35 @@ import java.util.List;
 @Table(name = "Usuarios")
 public class Usuario {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idUsuario;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer idUsuario;
+	private String nombre;
+	private String email;
+	private String password;
+	private String avatarUrl;
+	private LocalDateTime fechaRegistro = LocalDateTime.now();
 
-    @Column(nullable = false, length = 100)
-    private String nombre;
+	// Relaciones
+	@OneToMany(mappedBy = "usuario")
+	private List<ListaLectura> listasLectura;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
+	@OneToMany(mappedBy = "usuario")
+	private List<Reviews> reseñas;
 
-    @Column(nullable = false)
-    private String password;
+	@ManyToMany
+	@JoinTable(name = "Usuarios_Roles", joinColumns = @JoinColumn(name = "id_usuario"), inverseJoinColumns = @JoinColumn(name = "id_rol"))
+	private List<Rol> roles;
 
-    private String avatarUrl;
+	// Relaciones de seguimiento
+	@ManyToMany
+	@JoinTable(name = "Seguidores", joinColumns = @JoinColumn(name = "id_seguidor"), inverseJoinColumns = @JoinColumn(name = "id_seguido"))
+	private List<Usuario> siguiendo; // Usuarios a los que este usuario sigue
 
+	@ManyToMany(mappedBy = "siguiendo")
+	private List<Usuario> seguidores; // Usuarios que siguen a este usuario
 
-@Column(name = "fecha_registro", updatable = false)
-private LocalDateTime fechaRegistro = LocalDateTime.now();
-
-    // Relaciones
-    @OneToMany(mappedBy = "usuario")
-    private List<ListaLectura> listasLectura;
-
-    @OneToMany(mappedBy = "usuario")
-    private List<Reviews> reseñas;
-    
-    @ManyToMany
-    @JoinTable(
-        name = "Usuarios_Roles",
-        joinColumns = @JoinColumn(name = "id_usuario"),
-        inverseJoinColumns = @JoinColumn(name = "id_rol")
-    )
-    private List<Roles> roles;
-
+	// Setters y getters
 	public Integer getIdUsuario() {
 		return idUsuario;
 	}
@@ -108,13 +103,28 @@ private LocalDateTime fechaRegistro = LocalDateTime.now();
 		this.reseñas = reseñas;
 	}
 
-	public List<Roles> getRoles() {
+	public List<Rol> getRoles() {
 		return roles;
 	}
 
-	public void setRoles(List<Roles> roles) {
+	public void setRoles(List<Rol> roles) {
 		this.roles = roles;
 	}
 
-    
+	public List<Usuario> getSiguiendo() {
+		return siguiendo;
+	}
+
+	public void setSiguiendo(List<Usuario> siguiendo) {
+		this.siguiendo = siguiendo;
+	}
+
+	public List<Usuario> getSeguidores() {
+		return seguidores;
+	}
+
+	public void setSeguidores(List<Usuario> seguidores) {
+		this.seguidores = seguidores;
+	}
+
 }

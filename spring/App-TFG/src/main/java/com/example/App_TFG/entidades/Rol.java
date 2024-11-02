@@ -1,25 +1,25 @@
 package com.example.App_TFG.entidades;
 
-
 import jakarta.persistence.*;
-
 import java.util.List;
 
 @Entity
 @Table(name = "Roles")
-public class Roles {
+public class Rol {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idRol;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String nombre;
 
+    // Relación con Usuario (muchos a muchos)
     @ManyToMany(mappedBy = "roles")
     private List<Usuario> usuarios;
 
     // Getters y Setters
+
     public Integer getIdRol() {
         return idRol;
     }
@@ -44,3 +44,4 @@ public class Roles {
         this.usuarios = usuarios;
     }
 }
+
