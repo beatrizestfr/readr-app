@@ -1,0 +1,81 @@
+package com.example.App_TFG.services;
+
+import com.example.App_TFG.entidades.Usuario;
+import com.example.App_TFG.repositories.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service //Marca esta clase como un servicio, lo que indica a Spring que esta clase es un componente de lógica de negocio.
+public class UsuarioService {
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;//instancia de UsuarioRepository, que es la interfaz que conecta con la base de datos para la entidad Usuario.
+
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(); //es un objeto que nos permite encriptar (hashear) contraseñas.
+
+    // Crear usuario
+    public Usuario crearUsuario(Usuario usuario) {
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword())); // Hash de la contraseña
+        return usuarioRepository.save(usuario);
+    }
+
+    // Buscar usuario por ID
+    public Optional<Usuario> obtenerUsuarioPorId(Integer id) { // presenta un usuario encontrado o no 
+        return usuarioRepository.findById(id);
+    }
+    
+    public Optional<Usuario> buscarPorNombre(String nombre) {
+        return usuarioRepository.findByNombre(nombre);
+    }
+
+
+    // Autenticar usuario
+    public boolean autenticarUsuario(String nombre, String password) {
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByNombre(nombre);
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            return passwordEncoder.matches(password, usuario.getPassword()); // Compara el hash
+        }
+        return false;
+    }
+
+    // Seguir a otro usuario
+    public void seguirUsuario(Usuario usuario, Usuario usuarioASeguir) {
+        usuario.getSiguiendo().add(usuarioASeguir);
+        usuarioASeguir.getSeguidores().add(usuario);
+        usuarioRepository.save(usuario);
+        usuarioRepository.save(usuarioASeguir);
+    }
+    
+    //dejar de seguir 
+    public void dejarDeSeguirUsuario(Usuario usuario, Usuario usuarioADejarDeSeguir) {
+        usuario.getSiguiendo().remove(usuarioADejarDeSeguir);
+        usuarioADejarDeSeguir.getSeguidores().remove(usuario);
+        usuarioRepository.save(usuario);
+        usuarioRepository.save(usuarioADejarDeSeguir);
+    }
+
+
+    // Obtener lista de seguidores
+    public List<Usuario> obtenerSeguidores(Integer idUsuario) {
+        return usuarioRepository.findById(idUsuario)
+                .map(Usuario::getSeguidores)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+    }
+
+    // Obtener lista de usuarios seguidos
+    public List<Usuario> obtenerSiguiendo(Integer idUsuario) {
+        return usuarioRepository.findById(idUsuario)
+                .map(Usuario::getSiguiendo)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+    }
+    // cambio de ususario
+    public boolean cambiarUsuario(String nombreNuevo, String password) {
+        return autenticarUsuario(nombreNuevo, password);
+    }
+
+}
