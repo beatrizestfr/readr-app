@@ -18,8 +18,12 @@ public class Rol {
     @ManyToMany(mappedBy = "roles")
     private List<Usuario> usuarios;
 
-    // Getters y Setters
+    // Constructor
+    public Rol(String nombre) {
+        this.nombre = nombre;
+    }
 
+    // Getters y Setters
     public Integer getIdRol() {
         return idRol;
     }

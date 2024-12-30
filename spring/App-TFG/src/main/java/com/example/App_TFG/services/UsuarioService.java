@@ -1,9 +1,9 @@
 package com.example.App_TFG.services;
 
+import com.example.App_TFG.entidades.Rol;
 import com.example.App_TFG.entidades.Usuario;
 import com.example.App_TFG.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,13 +15,6 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;//instancia de UsuarioRepository, que es la interfaz que conecta con la base de datos para la entidad Usuario.
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(); //es un objeto que nos permite encriptar (hashear) contraseñas.
-
-    // Crear usuario
-    public Usuario crearUsuario(Usuario usuario) {
-        usuario.setPassword(passwordEncoder.encode(usuario.getPassword())); // Hash de la contraseña
-        return usuarioRepository.save(usuario);
-    }
 
     // Buscar usuario por ID
     public Optional<Usuario> obtenerUsuarioPorId(Integer id) { // presenta un usuario encontrado o no 
@@ -32,16 +25,6 @@ public class UsuarioService {
         return usuarioRepository.findByNombre(nombre);
     }
 
-
-    // Autenticar usuario
-    public boolean autenticarUsuario(String nombre, String password) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByNombre(nombre);
-        if (usuarioOpt.isPresent()) {
-            Usuario usuario = usuarioOpt.get();
-            return passwordEncoder.matches(password, usuario.getPassword()); // Compara el hash
-        }
-        return false;
-    }
 
     // Seguir a otro usuario
     public void seguirUsuario(Usuario usuario, Usuario usuarioASeguir) {
@@ -73,9 +56,6 @@ public class UsuarioService {
                 .map(Usuario::getSiguiendo)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
     }
-    // cambio de ususario
-    public boolean cambiarUsuario(String nombreNuevo, String password) {
-        return autenticarUsuario(nombreNuevo, password);
-    }
+
 
 }

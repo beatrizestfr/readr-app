@@ -28,6 +28,17 @@ public class Libro {
     @ManyToMany(mappedBy = "libros")
     private List<ListaLectura> listasLectura;
 
+    // Constructor con todos los parámetros
+    public Libro(String titulo, String autor, String imagenUrl, String sinopsis, String googleBooksId) {
+        this.titulo = titulo;
+        this.autor = autor;
+        this.imagenUrl = imagenUrl;
+        this.sinopsis = sinopsis;
+        this.googleBooksId = googleBooksId;
+    }
+
+  
+
     // Getters y Setters
 
     public Integer getIdLibro() {
@@ -86,4 +97,3 @@ public class Libro {
         this.listasLectura = listasLectura;
     }
 }
-

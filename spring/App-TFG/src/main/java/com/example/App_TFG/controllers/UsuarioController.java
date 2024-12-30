@@ -17,12 +17,7 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService; // Inyecta el servicio de Usuario para la lógica de negocio
 
-    // Crear un nuevo usuario
-    @PostMapping("/crear") // Asocia esta acción a una petición POST en "/api/usuarios/crear"
-    public ResponseEntity<Usuario> crearUsuario(@RequestBody Usuario usuario) {
-        Usuario nuevoUsuario = usuarioService.crearUsuario(usuario); // Llama al servicio para crear el usuario
-        return new ResponseEntity<>(nuevoUsuario, HttpStatus.CREATED); // Devuelve el usuario creado con un código 201
-    }
+
 
     // Buscar un usuario por su ID
     @GetMapping("/{id}") // Asocia esta acción a una petición GET en "/api/usuarios/{id}"
@@ -40,16 +35,7 @@ public class UsuarioController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND)); // Si no, retorna 404 Not Found
     }
 
-    // Autenticar a un usuario
-    @PostMapping("/autenticar") // Asocia esta acción a una petición POST en "/api/usuarios/autenticar"
-    public ResponseEntity<String> autenticarUsuario(@RequestBody Usuario usuario) {
-        boolean autenticado = usuarioService.autenticarUsuario(usuario.getNombre(), usuario.getPassword()); // Llama al servicio para autenticar
-        if (autenticado) {
-            return new ResponseEntity<>("Usuario autenticado correctamente", HttpStatus.OK); // Si es exitoso, retorna un mensaje de éxito
-        } else {
-            return new ResponseEntity<>("Credenciales incorrectas", HttpStatus.UNAUTHORIZED); // Si falla, devuelve 401 Unauthorized
-        }
-    }
+
 
     // Seguir a otro usuario
     @PostMapping("/seguir/{idSeguir}") // Ruta para seguir a otro usuario
@@ -93,16 +79,7 @@ public class UsuarioController {
         return new ResponseEntity<>(siguiendo, HttpStatus.OK);
     }
 
-    // Cambiar de cuenta (cambiar usuario)
-    @PostMapping("/cambiarCuenta") // Ruta para cambiar la cuenta
-    public ResponseEntity<String> cambiarUsuario(@RequestBody Usuario usuario) {
-        boolean usuarioCambiado = usuarioService.cambiarUsuario(usuario.getNombre(), usuario.getPassword()); // Llama al servicio
-        if (usuarioCambiado) {
-            return new ResponseEntity<>("Cambio de cuenta exitoso", HttpStatus.OK); // Si el cambio es exitoso, se retorna OK
-        } else {
-            return new ResponseEntity<>("Credenciales incorrectas", HttpStatus.UNAUTHORIZED); // Si falla, retorna Unauthorized
-        }
-    }
+
 
 }
 

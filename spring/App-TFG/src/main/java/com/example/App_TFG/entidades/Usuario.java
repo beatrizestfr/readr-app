@@ -3,128 +3,143 @@ package com.example.App_TFG.entidades;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "Usuarios")
 public class Usuario {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer idUsuario;
-	private String nombre;
-	private String email;
-	private String password;
-	private String avatarUrl;
-	private LocalDateTime fechaRegistro = LocalDateTime.now();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer idUsuario;
+    private String nombre;
+    private String email;
+    private String password;
+    private String avatarUrl;
+    private LocalDateTime fechaRegistro = LocalDateTime.now();
 
-	// Relaciones
-	@OneToMany(mappedBy = "usuario")
-	private List<ListaLectura> listasLectura;
+    // Relación con el rol
+    @ManyToOne
+    @JoinColumn(name = "id_rol")
+    private Rol rol;
 
-	@OneToMany(mappedBy = "usuario")
-	private List<Reviews> reseñas;
+    // Relaciones
+    @OneToMany(mappedBy = "usuario")
+    private List<ListaLectura> listasLectura;
 
-	@ManyToMany
-	@JoinTable(name = "Usuarios_Roles", joinColumns = @JoinColumn(name = "id_usuario"), inverseJoinColumns = @JoinColumn(name = "id_rol"))
-	private List<Rol> roles;
+    @OneToMany(mappedBy = "usuario")
+    private List<Reviews> reseñas;
 
-	// Relaciones de seguimiento
-	@ManyToMany
-	@JoinTable(name = "Seguidores", joinColumns = @JoinColumn(name = "id_seguidor"), inverseJoinColumns = @JoinColumn(name = "id_seguido"))
-	private List<Usuario> siguiendo; // Usuarios a los que este usuario sigue
+    // Relaciones de seguimiento
+    @ManyToMany
+    @JoinTable(name = "Seguidores", joinColumns = @JoinColumn(name = "id_seguidor"), inverseJoinColumns = @JoinColumn(name = "id_seguido"))
+    private List<Usuario> siguiendo; // Usuarios a los que este usuario sigue
 
-	@ManyToMany(mappedBy = "siguiendo")
-	private List<Usuario> seguidores; // Usuarios que siguen a este usuario
+    @ManyToMany(mappedBy = "siguiendo")
+    private List<Usuario> seguidores; // Usuarios que siguen a este usuario
 
-	// Setters y getters
-	public Integer getIdUsuario() {
-		return idUsuario;
-	}
+    // Constructor sin parámetros (inicializa con valores predeterminados)
+    public Usuario() {
+        this.rol = new Rol("User");
+        this.fechaRegistro = LocalDateTime.now();
+    }
 
-	public void setIdUsuario(Integer idUsuario) {
-		this.idUsuario = idUsuario;
-	}
+    // Constructor con parámetros para inicializar todos los atributos importantes
+    public Usuario(String nombre, String email, String password, Rol rol, String avatarUrl) {
+        this.nombre = nombre;
+        this.email = email;
+        this.password = password;
+        this.rol = rol != null ? rol : new Rol("User");  // Asigna un rol por defecto si es null
+        this.avatarUrl = avatarUrl;
+        this.fechaRegistro = LocalDateTime.now();  // Siempre se asigna la fecha actual
+    }
 
-	public String getNombre() {
-		return nombre;
-	}
+    // Getters y setters
+    public Integer getIdUsuario() {
+        return idUsuario;
+    }
 
-	public void setNombre(String nombre) {
-		this.nombre = nombre;
-	}
+    public void setIdUsuario(Integer idUsuario) {
+        this.idUsuario = idUsuario;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public String getNombre() {
+        return nombre;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public String getEmail() {
+        return email;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-	public String getAvatarUrl() {
-		return avatarUrl;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	public void setAvatarUrl(String avatarUrl) {
-		this.avatarUrl = avatarUrl;
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-	public LocalDateTime getFechaRegistro() {
-		return fechaRegistro;
-	}
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
 
-	public void setFechaRegistro(LocalDateTime fechaRegistro) {
-		this.fechaRegistro = fechaRegistro;
-	}
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
 
-	public List<ListaLectura> getListasLectura() {
-		return listasLectura;
-	}
+    public LocalDateTime getFechaRegistro() {
+        return fechaRegistro;
+    }
 
-	public void setListasLectura(List<ListaLectura> listasLectura) {
-		this.listasLectura = listasLectura;
-	}
+    public void setFechaRegistro(LocalDateTime fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
+    }
 
-	public List<Reviews> getReseñas() {
-		return reseñas;
-	}
+    public Rol getRol() {
+        return rol;
+    }
 
-	public void setReseñas(List<Reviews> reseñas) {
-		this.reseñas = reseñas;
-	}
+    public void setRol(Rol rol) {
+        this.rol = rol;
+    }
 
-	public List<Rol> getRoles() {
-		return roles;
-	}
+    public List<ListaLectura> getListasLectura() {
+        return listasLectura;
+    }
 
-	public void setRoles(List<Rol> roles) {
-		this.roles = roles;
-	}
+    public void setListasLectura(List<ListaLectura> listasLectura) {
+        this.listasLectura = listasLectura;
+    }
 
-	public List<Usuario> getSiguiendo() {
-		return siguiendo;
-	}
+    public List<Reviews> getReseñas() {
+        return reseñas;
+    }
 
-	public void setSiguiendo(List<Usuario> siguiendo) {
-		this.siguiendo = siguiendo;
-	}
+    public void setReseñas(List<Reviews> reseñas) {
+        this.reseñas = reseñas;
+    }
 
-	public List<Usuario> getSeguidores() {
-		return seguidores;
-	}
+    public List<Usuario> getSiguiendo() {
+        return siguiendo;
+    }
 
-	public void setSeguidores(List<Usuario> seguidores) {
-		this.seguidores = seguidores;
-	}
+    public void setSiguiendo(List<Usuario> siguiendo) {
+        this.siguiendo = siguiendo;
+    }
 
+    public List<Usuario> getSeguidores() {
+        return seguidores;
+    }
+
+    public void setSeguidores(List<Usuario> seguidores) {
+        this.seguidores = seguidores;
+    }
 }
