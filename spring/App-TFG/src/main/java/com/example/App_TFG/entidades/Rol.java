@@ -3,6 +3,8 @@ package com.example.App_TFG.entidades;
 import jakarta.persistence.*;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "Roles")
 public class Rol {
@@ -15,9 +17,13 @@ public class Rol {
     private String nombre;
 
     // Relación con Usuario (muchos a muchos)
+    @JsonIgnore //Esto evitará que la lista de usuarios en Rol sea serializada
     @ManyToMany(mappedBy = "roles")
     private List<Usuario> usuarios;
 
+    // Constructor sin parámetros
+    public Rol() {}
+    
     // Constructor
     public Rol(String nombre) {
         this.nombre = nombre;

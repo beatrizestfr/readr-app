@@ -26,12 +26,12 @@ public class ReviewsService {
 
     // Obtener reseñas por libro
     public List<Reviews> obtenerReseñasPorLibro(Integer idLibro) {
-        return reviewsRepository.findByLibroId(idLibro);
+        return reviewsRepository.findByLibro_IdLibro(idLibro);
     }
 
     // Obtener reseñas por usuario
     public List<Reviews> obtenerReseñasPorUsuario(Integer idUsuario) {
-        return reviewsRepository.findByUsuarioId(idUsuario);
+        return reviewsRepository.findByUsuario_IdUsuario(idUsuario);
     }
 
     // Eliminar reseña por ID

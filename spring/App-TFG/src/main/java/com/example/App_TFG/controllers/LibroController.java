@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -19,51 +18,30 @@ public class LibroController {
     @Autowired
     private LibroService libroService; // Inyección del servicio
 
-    // Crear un nuevo libro
-    @PostMapping
-    public ResponseEntity<Libro> crearLibro(@RequestBody Libro libro) {
-        Libro libroCreado = libroService.crearLibro(libro);
-        return new ResponseEntity<>(libroCreado, HttpStatus.CREATED);
+    // Buscar libros en la API de Google
+    @GetMapping("/buscar")
+    public ResponseEntity<List<BookDTO>> buscarLibros(@RequestParam String titulo, @RequestParam(required = false) String autor) {
+        // Llamada al servicio para buscar libros en Google
+        List<BookDTO> librosGoogle = libroService.buscarLibrosEnGoogle(titulo, autor);
+
+        if (librosGoogle.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Si no se encuentran libros
+        }
+
+        return new ResponseEntity<>(librosGoogle, HttpStatus.OK); // Si se encuentran libros
     }
 
-    // Obtener todos los libros
-    @GetMapping
-    public List<BookDTO> obtenerTodosLosLibros() {
-        List<Libro> libros = libroService.obtenerTodosLosLibros();
-        List<BookDTO> bookDTOs = libros.stream()
-            .map(libro -> new BookDTO(libro.getTitulo(), List.of(libro.getAutor()), libro.getSinopsis(), libro.getImagenUrl(), libro.getGoogleBooksId()))
-            .collect(Collectors.toList());
-        return bookDTOs;
-    }
+    // Añadir libro a la lista del usuario (libro de Google)
+    @PostMapping("/agregar-a-lista")
+    public ResponseEntity<Void> agregarLibroALista(@RequestParam String titulo, @RequestParam(required = false) String autor) {
+        // Llamada al servicio para añadir el libro a la lista del usuario
+        Libro libroAñadido = libroService.añadirLibroALaLista(titulo, autor);
 
-    // Obtener un libro por su ID
-    @GetMapping("/{id}")
-    public ResponseEntity<BookDTO> obtenerLibroPorId(@PathVariable Integer id) {
-        Optional<Libro> libroOpt = libroService.obtenerLibroPorId(id);
-        return libroOpt.map(libro -> new ResponseEntity<>(new BookDTO(libro.getTitulo(), List.of(libro.getAutor()), libro.getSinopsis(), libro.getImagenUrl(), libro.getGoogleBooksId()), HttpStatus.OK))
-                       .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    // Obtener un libro por su título
-    @GetMapping("/titulo/{titulo}")
-    public ResponseEntity<BookDTO> obtenerLibroPorTitulo(@PathVariable String titulo) {
-        Optional<Libro> libroOpt = libroService.obtenerLibroPorTitulo(titulo);
-        return libroOpt.map(libro -> new ResponseEntity<>(new BookDTO(libro.getTitulo(), List.of(libro.getAutor()), libro.getSinopsis(), libro.getImagenUrl(), libro.getGoogleBooksId()), HttpStatus.OK))
-                       .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    // Obtener un libro por su googleBooksId
-    @GetMapping("/google/{googleBooksId}")
-    public ResponseEntity<BookDTO> obtenerLibroPorGoogleBooksId(@PathVariable String googleBooksId) {
-        Optional<Libro> libroOpt = libroService.obtenerLibroPorGoogleBooksId(googleBooksId);
-        return libroOpt.map(libro -> new ResponseEntity<>(new BookDTO(libro.getTitulo(), List.of(libro.getAutor()), libro.getSinopsis(), libro.getImagenUrl(), libro.getGoogleBooksId()), HttpStatus.OK))
-                       .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    // Eliminar un libro por su ID
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarLibro(@PathVariable Integer id) {
-        libroService.eliminarLibro(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        if (libroAñadido != null) {
+            return new ResponseEntity<>(HttpStatus.CREATED); // Respuesta exitosa
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Si no se encuentra el libro
+        }
     }
 }
+

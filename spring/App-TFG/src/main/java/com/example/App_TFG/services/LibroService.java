@@ -30,39 +30,13 @@ public class LibroService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // Crear un nuevo libro
-    public Libro crearLibro(Libro libro) {
-        return libroRepository.save(libro);
-    }
-
-    // Obtener un libro por su ID
-    public Optional<Libro> obtenerLibroPorId(Integer id) {
-        return libroRepository.findById(id);
-    }
-
-    // Obtener un libro por su título
-    public Optional<Libro> obtenerLibroPorTitulo(String titulo) {
-        return libroRepository.findByTitulo(titulo);
-    }
-
     // Obtener un libro por su googleBooksId
     public Optional<Libro> obtenerLibroPorGoogleBooksId(String googleBooksId) {
         return libroRepository.findByGoogleBooksId(googleBooksId);
     }
 
-    // Obtener todos los libros
-    public List<Libro> obtenerTodosLosLibros() {
-        return libroRepository.findAll();
-    }
-
-    // Eliminar un libro
-    public void eliminarLibro(Integer id) {
-        libroRepository.deleteById(id);
-    }
-// --------------------------------------------------------------------------------------------
-    
     // Buscar libros usando la API de Google Books por título y autor
-    public List<Libro> buscarLibrosEnGoogle(String titulo, String autor) {
+    public List<BookDTO> buscarLibrosEnGoogle(String titulo, String autor) {
         String url = apiUrl + "?q=" + titulo;
         if (autor != null && !autor.isEmpty()) {
             url += "+inauthor:" + autor;
@@ -76,24 +50,29 @@ public class LibroService {
                 .map(item -> {
                     GoogleBookVolumeInfo volumeInfo = item.getVolumeInfo();
 
-                    // Creamos el libro usando solo título y autor en el constructor
-                    Libro libro = new Libro(volumeInfo.getTitle(), String.join(", ", volumeInfo.getAuthors()), volumeInfo.getDescription(), 
+                    // Creamos el DTO de libro usando solo título y autor
+                    return new BookDTO(volumeInfo.getTitle(), volumeInfo.getAuthors(), volumeInfo.getDescription(),
                             volumeInfo.getImageLinks() != null ? volumeInfo.getImageLinks().getThumbnail() : null, item.getId());
-
-
-                    return libro;
                 })
                 .collect(Collectors.toList());
         }
         return List.of(); // Retorna una lista vacía si no se encuentra ningún libro
     }
 
-    // Añadir un libro a las listas del usuario si existe en Google Books
+    // Añadir un libro a la lista del usuario si existe en Google Books
     public Libro añadirLibroALaLista(String titulo, String autor) {
-        List<Libro> librosEncontrados = buscarLibrosEnGoogle(titulo, autor);
+        List<BookDTO> librosEncontrados = buscarLibrosEnGoogle(titulo, autor);
         if (!librosEncontrados.isEmpty()) {
-            Libro libro = librosEncontrados.get(0); // Tomamos el primer libro encontrado
-            return crearLibro(libro); // Añadimos el libro a la base de datos
+            // Si el libro ya existe en la base de datos, no lo agregamos de nuevo
+            BookDTO libroDTO = librosEncontrados.get(0);
+            Optional<Libro> libroExistente = libroRepository.findByGoogleBooksId(libroDTO.getGoogleBooksId());
+            if (libroExistente.isPresent()) {
+                return libroExistente.get();
+            } else {
+                // Si el libro no existe, lo agregamos
+                Libro libro = new Libro(libroDTO.getTitle(), String.join(", ", libroDTO.getAuthors() ), libroDTO.getSinopsis(), libroDTO.getImagenUrl(), libroDTO.getGoogleBooksId());
+                return libroRepository.save(libro); // Guardamos el libro en la base de datos
+            }
         }
         return null; // Retorna null si no se encuentra ningún libro
     }

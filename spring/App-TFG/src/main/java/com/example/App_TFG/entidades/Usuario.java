@@ -5,54 +5,69 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "Usuarios")
 public class Usuario {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idUsuario;
-    private String nombre;
-    private String email;
-    private String password;
-    private String avatarUrl;
-    private LocalDateTime fechaRegistro = LocalDateTime.now();
+	 @Id
+	    @GeneratedValue(strategy = GenerationType.IDENTITY)
+	    @Column(name = "id_usuario") // Mapeo correcto del nombre de la columna
+	    private Integer idUsuario;
 
-    // Relación con el rol
-    @ManyToOne
-    @JoinColumn(name = "id_rol")
-    private Rol rol;
+	    @Column(name = "nombre") // Opcional si los nombres coinciden
+	    private String nombre;
 
-    // Relaciones
-    @OneToMany(mappedBy = "usuario")
-    private List<ListaLectura> listasLectura;
+	    @Column(name = "email", nullable = false, unique = true)
+	    private String email;
 
-    @OneToMany(mappedBy = "usuario")
-    private List<Reviews> reseñas;
+	    @Column(name = "password", nullable = false)
+	    private String password;
 
-    // Relaciones de seguimiento
-    @ManyToMany
-    @JoinTable(name = "Seguidores", joinColumns = @JoinColumn(name = "id_seguidor"), inverseJoinColumns = @JoinColumn(name = "id_seguido"))
-    private List<Usuario> siguiendo; // Usuarios a los que este usuario sigue
+	    @Column(name = "avatar_url")
+	    private String avatarUrl;
 
-    @ManyToMany(mappedBy = "siguiendo")
-    private List<Usuario> seguidores; // Usuarios que siguen a este usuario
+	    @Column(name = "fecha_registro", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+	    private LocalDateTime fechaRegistro;
 
-    // Constructor sin parámetros (inicializa con valores predeterminados)
-    public Usuario() {
-        this.rol = new Rol("User");
-        this.fechaRegistro = LocalDateTime.now();
-    }
+	    // Relación con los roles (ManyToMany)
+	    @ManyToMany
+	    @JoinTable(
+	        name = "usuario_rol", 
+	        joinColumns = @JoinColumn(name = "usuario_id"), 
+	        inverseJoinColumns = @JoinColumn(name = "rol_id")
+	    )
+	    private List<Rol> roles;
 
-    // Constructor con parámetros para inicializar todos los atributos importantes
-    public Usuario(String nombre, String email, String password, Rol rol, String avatarUrl) {
-        this.nombre = nombre;
-        this.email = email;
-        this.password = password;
-        this.rol = rol != null ? rol : new Rol("User");  // Asigna un rol por defecto si es null
-        this.avatarUrl = avatarUrl;
-        this.fechaRegistro = LocalDateTime.now();  // Siempre se asigna la fecha actual
-    }
+	    // Relaciones con otras entidades
+	    @OneToMany(fetch = FetchType.EAGER, mappedBy = "usuario")
+	    @JsonManagedReference // evitar serie infi
+	    private List<ListaLectura> listasLectura;
+
+	    @OneToMany(mappedBy = "usuario")
+	    private List<Reviews> reseñas;
+
+	    // Relaciones de seguimiento
+	    @ManyToMany
+	    @JoinTable(name = "Seguidores", joinColumns = @JoinColumn(name = "id_seguidor"), inverseJoinColumns = @JoinColumn(name = "id_seguido"))
+	    private List<Usuario> siguiendo; // Usuarios a los que este usuario sigue
+
+	    @ManyToMany(mappedBy = "siguiendo")
+	    private List<Usuario> seguidores; // Usuarios que siguen a este usuario
+
+	    // Constructor vacío necesario para JPA
+	    public Usuario() {}
+
+	    // Constructor con parámetros
+	    public Usuario(String nombre, String email, String password, List<Rol> roles, String avatarUrl) {
+	        this.nombre = nombre;
+	        this.email = email;
+	        this.password = password;
+	        this.roles = roles != null ? roles : List.of(new Rol("User"));  // Asigna un rol por defecto si roles es null
+	        this.avatarUrl = avatarUrl;
+	        this.fechaRegistro = LocalDateTime.now();  // Siempre se asigna la fecha actual
+	    }
 
     // Getters y setters
     public Integer getIdUsuario() {
@@ -103,12 +118,12 @@ public class Usuario {
         this.fechaRegistro = fechaRegistro;
     }
 
-    public Rol getRol() {
-        return rol;
+    public List<Rol> getRoles() {
+        return roles;
     }
 
-    public void setRol(Rol rol) {
-        this.rol = rol;
+    public void setRoles(List<Rol> roles) {
+        this.roles = roles;
     }
 
     public List<ListaLectura> getListasLectura() {
@@ -142,4 +157,16 @@ public class Usuario {
     public void setSeguidores(List<Usuario> seguidores) {
         this.seguidores = seguidores;
     }
+    
+    @Override
+    public String toString() {
+        return "Usuario{" +
+                "email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", avatarUrl='" + avatarUrl + '\'' +
+                ", roles=" + roles +
+                ", nombre='" + nombre + '\'' +
+                '}';
+    }
+
 }

@@ -11,6 +11,6 @@ public interface LibroRepository extends JpaRepository<Libro, Integer> {
     // Método para buscar un libro por su googleBooksId (si existe)
     Optional<Libro> findByGoogleBooksId(String googleBooksId);
     
-    Optional<Libro> findById(String idLibro);
+    Optional<Libro> findById(Integer idLibro);
 
 }

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RolRepository extends JpaRepository<Rol, Integer> {
-    
+
     // Método para buscar un rol por su nombre
     Optional<Rol> findByNombre(String nombre);
 }

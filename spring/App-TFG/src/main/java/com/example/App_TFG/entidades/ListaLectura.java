@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "ListaLectura")
 public class ListaLectura {
@@ -12,8 +14,7 @@ public class ListaLectura {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idLista;
 
-    @Column(nullable = false, length = 255)
-    private String nombreLista;
+  
 
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();
@@ -21,16 +22,20 @@ public class ListaLectura {
     // Relación con Usuario
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
+    @JsonBackReference
     private Usuario usuario;
 
     // Relación con Libros (Muchos a Muchos con tabla intermedia ListaLectura_Libros)
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "ListaLectura_Libros",
         joinColumns = @JoinColumn(name = "id_lista"),
         inverseJoinColumns = @JoinColumn(name = "id_libro")
     )
-    private List<Libro> libros;
+    private List<Libro> libros; 
+    
+    @Column(name = "nombreLista", nullable = false, length = 255)
+    private String nombreLista;
 
     // Getters y Setters
 
