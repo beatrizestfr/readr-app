@@ -5,16 +5,16 @@ import java.util.List;
 public class BookDTO {
     private String title;
     private List<String> authors;
-    private String sinopsis;
     private String imagenUrl;
+    private String sinopsis;
     private String googleBooksId;
 
     // Constructor
-    public BookDTO(String title, List<String> authors, String sinopsis, String imagenUrl, String googleBooksId) {
+    public BookDTO(String title, List<String> authors, String imagenUrl, String sinopsis,  String googleBooksId) {
         this.title = title;
         this.authors = authors;
-        this.sinopsis = sinopsis;
         this.imagenUrl = imagenUrl;
+        this.sinopsis = sinopsis;
         this.googleBooksId = googleBooksId;
     }
 
@@ -34,6 +34,13 @@ public class BookDTO {
     public void setAuthors(List<String> authors) {
         this.authors = authors;
     }
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public void setImagenUrl(String imagenUrl) {
+        this.imagenUrl = imagenUrl;
+    }
 
     public String getSinopsis() {
         return sinopsis;
@@ -43,13 +50,6 @@ public class BookDTO {
         this.sinopsis = sinopsis;
     }
 
-    public String getImagenUrl() {
-        return imagenUrl;
-    }
-
-    public void setImagenUrl(String imagenUrl) {
-        this.imagenUrl = imagenUrl;
-    }
 
     public String getGoogleBooksId() {
         return googleBooksId;

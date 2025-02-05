@@ -7,11 +7,12 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
-@Table(name = "ListaLectura")
+@Table(name = "lista_lectura")
 public class ListaLectura {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_lista")
     private Integer idLista;
 
   
@@ -28,13 +29,13 @@ public class ListaLectura {
     // Relación con Libros (Muchos a Muchos con tabla intermedia ListaLectura_Libros)
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-        name = "ListaLectura_Libros",
+        name = "lista_lectura_libros",
         joinColumns = @JoinColumn(name = "id_lista"),
         inverseJoinColumns = @JoinColumn(name = "id_libro")
     )
     private List<Libro> libros; 
     
-    @Column(name = "nombreLista", nullable = false, length = 255)
+    @Column(name = "nombre_lista", nullable = false, length = 255)
     private String nombreLista;
 
     // Getters y Setters

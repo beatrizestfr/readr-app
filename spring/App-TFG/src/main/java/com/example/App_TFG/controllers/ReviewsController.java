@@ -6,6 +6,7 @@ import com.example.App_TFG.services.AuthenticationService;
 import com.example.App_TFG.services.ReviewsService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,10 +26,13 @@ public class ReviewsController {
     @Autowired
     private AuthenticationService authenticationService;
 
-    // Crear reseña
-    @PostMapping
-    public ResponseEntity<Reviews> crearReseña(@RequestBody Reviews reseña) {
-        Reviews reseñaCreada = reviewsService.crearReseña(reseña);
+ // Crear reseña
+    @Transactional
+    @PostMapping("/{idLibro}")
+    public ResponseEntity<Reviews> crearReseña(@PathVariable Integer idLibro, @RequestBody String contenido,  HttpSession session) {
+    	Usuario usuario = (Usuario) session.getAttribute("usuario");
+
+        Reviews reseñaCreada = reviewsService.crearReseña(idLibro, contenido, usuario);
         return new ResponseEntity<>(reseñaCreada, HttpStatus.CREATED);
     }
 

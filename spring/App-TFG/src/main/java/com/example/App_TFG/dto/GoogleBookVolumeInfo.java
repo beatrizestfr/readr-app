@@ -5,8 +5,8 @@ import java.util.List;
 public class GoogleBookVolumeInfo {
     private String title;
     private List<String> authors;
-    private String description; // Para la sinopsis
     private GoogleBookImageLinks imageLinks; // Para la imagen
+    private String description; // Para la sinopsis
 
     // Getters y setters
     public String getTitle() {
@@ -25,13 +25,6 @@ public class GoogleBookVolumeInfo {
         this.authors = authors;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 
     public GoogleBookImageLinks getImageLinks() {
         return imageLinks;
@@ -39,5 +32,12 @@ public class GoogleBookVolumeInfo {
 
     public void setImageLinks(GoogleBookImageLinks imageLinks) {
         this.imageLinks = imageLinks;
+    }
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

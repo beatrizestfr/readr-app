@@ -80,6 +80,7 @@ public class AuthenticationController {
         	System.out.println("Datos recibidos en el controlador: " + usuario);
         	System.out.println("Datos recibidos en el controlador: email=" + usuario.getEmail() + ", password=" + usuario.getPassword());
         	
+        	// planteo ls utilixscion de rdye metodo y di borrarlo, ver funcionmamiento din el .
         	 if (usuario.getRoles() != null) {
                  for (Rol rol : usuario.getRoles()) {
                      if (rol.getIdRol() == null) { // Si el rol no tiene ID, buscarlo por nombre

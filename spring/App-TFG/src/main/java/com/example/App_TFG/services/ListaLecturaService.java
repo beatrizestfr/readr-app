@@ -79,8 +79,8 @@ public class ListaLecturaService {
 
         listaLectura.setUsuario(usuario);
         ListaLectura listaCreada = listaLecturaRepository.save(listaLectura);
-        logger.info("Lista de lectura '{}' creada con éxito para el usuario '{}'", usuario.getNombre());
-
+        logger.info("Lista de lectura '{}' creada con éxito: ID: {} para el usuario '{}'", listaCreada.getNombreLista(), listaCreada.getIdLista(), usuario.getNombre());
+        listaLecturaRepository.flush(); 
         return listaCreada;
         
     }
@@ -88,9 +88,15 @@ public class ListaLecturaService {
     
     // Obtener lista de lectura por ID
     public Optional<ListaLectura> obtenerListaLecturaPorId(Integer id) {
-        return listaLecturaRepository.findById(id);
+        logger.info("Buscando lista de lectura con id: {}", id);
+        Optional<ListaLectura> lista = listaLecturaRepository.findById(id);
+        if (lista.isPresent()) {
+            logger.info("Lista encontrada: {}", lista.get());
+        } else {
+            logger.warn("Lista no encontrada con id: {}", id);
+        }
+        return lista;
     }
-
  // Obtener todas las listas de lectura (solo las del usuario)
     public List<ListaLectura> obtenerListasUsuario(String nombreUsuario) {
         // Verificar si el nombre de usuario es nulo o vacío
@@ -143,25 +149,40 @@ public class ListaLecturaService {
 
  // Añadir libro a una lista de lectura
     public void añadirLibroALista(Integer idLista, Integer idLibro, Usuario usuario) {
+        logger.info("Intentando añadir libro {} a la lista {} para el usuario {}", idLibro, idLista, usuario);
+
         if (usuario == null) {
+            logger.warn("Intento de añadir libro sin usuario autenticado.");
             throw new IllegalArgumentException("Usuario no autenticado");
         }
 
         Optional<ListaLectura> listaOpt = listaLecturaRepository.findById(idLista);
         Optional<Libro> libroOpt = libroRepository.findById(idLibro);
 
-        if (listaOpt.isPresent() && libroOpt.isPresent()) {
-            ListaLectura lista = listaOpt.get();
-            if (lista.getUsuario().equals(usuario)) {
-                lista.getLibros().add(libroOpt.get());
-                listaLecturaRepository.save(lista);
-            } else {
-                throw new IllegalArgumentException("No puedes añadir un libro a esta lista");
-            }
-        } else {
-            throw new IllegalArgumentException("Lista o libro no encontrado");
+        if (listaOpt.isEmpty()) {
+            logger.warn("Lista con ID {} no encontrada.", idLista);
+            throw new IllegalArgumentException("Lista no encontrada");
         }
+
+        if (libroOpt.isEmpty()) {
+            logger.warn("Libro con ID {} no encontrado.", idLibro);
+            throw new IllegalArgumentException("Libro no encontrado");
+        }
+
+        ListaLectura lista = listaOpt.get();
+        logger.info("Lista encontrada: {} pertenece a usuario {}", lista.getIdLista(), lista.getUsuario().getIdUsuario());
+
+        if (!lista.getUsuario().getIdUsuario().equals(usuario.getIdUsuario())) {
+            logger.warn("El usuario {} no es el propietario de la lista {}", usuario.getIdUsuario(), lista.getIdLista());
+            throw new IllegalArgumentException("No puedes añadir un libro a esta lista");
+        }
+
+        logger.info("Añadiendo libro {} a la lista {}", libroOpt.get().getIdLibro(), lista.getIdLista());
+        lista.getLibros().add(libroOpt.get());
+        listaLecturaRepository.save(lista);
+        logger.info("Libro añadido correctamente.");
     }
+
 
     // Eliminar libro de una lista de lectura
     public void eliminarLibroDeLista(Integer idLista, Integer idLibro, Usuario usuario) {
@@ -174,7 +195,7 @@ public class ListaLecturaService {
 
         if (listaOpt.isPresent() && libroOpt.isPresent()) {
             ListaLectura lista = listaOpt.get();
-            if (lista.getUsuario().equals(usuario)) {
+            if (lista.getUsuario().getIdUsuario().equals(usuario.getIdUsuario())) {
                 lista.getLibros().remove(libroOpt.get());
                 listaLecturaRepository.save(lista);
             } else {

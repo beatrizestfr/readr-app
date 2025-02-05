@@ -31,11 +31,11 @@ public class LibroController {
         return new ResponseEntity<>(librosGoogle, HttpStatus.OK); // Si se encuentran libros
     }
 
-    // Añadir libro a la lista del usuario (libro de Google)
-    @PostMapping("/agregar-a-lista")
-    public ResponseEntity<Void> agregarLibroALista(@RequestParam String titulo, @RequestParam(required = false) String autor) {
+    // Añadir libro a la base de datos 
+    @PostMapping("/agregar")
+    public ResponseEntity<Void> agregar(@RequestParam String titulo, @RequestParam(required = false) String autor) {
         // Llamada al servicio para añadir el libro a la lista del usuario
-        Libro libroAñadido = libroService.añadirLibroALaLista(titulo, autor);
+        Libro libroAñadido = libroService.añadirLibro(titulo, autor);
 
         if (libroAñadido != null) {
             return new ResponseEntity<>(HttpStatus.CREATED); // Respuesta exitosa

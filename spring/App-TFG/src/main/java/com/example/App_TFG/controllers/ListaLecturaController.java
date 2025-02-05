@@ -5,6 +5,7 @@ import com.example.App_TFG.entidades.Usuario;
 import com.example.App_TFG.services.ListaLecturaService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,16 +14,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.Optional;
 @RestController
 @RequestMapping("/api/listas-lectura")
 public class ListaLecturaController {
+	
+	 private static final Logger logger = LoggerFactory.getLogger(ListaLecturaService.class);
 
     @Autowired
     private ListaLecturaService listaLecturaService;
     
     // Crear lista de lectura
+    @Transactional
     @PostMapping
     public ResponseEntity<ListaLectura> crearListaLectura(@RequestBody ListaLectura listaLectura, HttpSession session) {
         // Obtener el nombre del usuario desde la sesión
@@ -30,10 +37,12 @@ public class ListaLecturaController {
     	if (usuario == null) {
     	    return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // Usuario no autenticado
     	}
-       
+    	logger.info("Usuario autenticado: {} (ID: {})", usuario.getNombre(), usuario.getIdUsuario());
+        logger.info("Datos recibidos para crear la lista: {}", listaLectura);
 
         // Crear la lista de lectura
         ListaLectura listaCreada = listaLecturaService.crearListaLectura(listaLectura, usuario);
+        logger.info("Lista creada: {} (ID: {}) para el usuario: {}", listaCreada.getNombreLista(), listaCreada.getIdLista(), usuario.getNombre());
 
         // Asegurar las listas predeterminadas
         listaLecturaService.asegurarListasPredeterminadas(usuario);
@@ -45,11 +54,19 @@ public class ListaLecturaController {
     // Obtener lista de lectura por ID
     @GetMapping("/{id}")
     public ResponseEntity<ListaLectura> obtenerListaLecturaPorId(@PathVariable Integer id) {
+        logger.info("Buscando lista de lectura con id: {}", id);
+
         Optional<ListaLectura> listaOpt = listaLecturaService.obtenerListaLecturaPorId(id);
+        
+        
+        
         return listaOpt.map(lista -> new ResponseEntity<>(lista, HttpStatus.OK))
                        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+  
 
+
+    // todas las listad de lectura de un susuario
     @GetMapping
     public List<ListaLectura> obtenerTodasLasListas(HttpSession session) {
         // Obtener el usuario desde la sesión

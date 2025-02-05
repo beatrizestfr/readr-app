@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name = "Libros")
+@Table(name = "libros")
 public class Libro {
 
     @Id
@@ -19,6 +19,7 @@ public class Libro {
     @Column(name = "imagen_url")
     private String imagenUrl;
 
+    @Column(name = "sinopsis")
     private String sinopsis;
 
     @Column(name = "google_books_id", unique = true)
@@ -27,6 +28,10 @@ public class Libro {
     // Relación Muchos a Muchos con ListaLectura
     @ManyToMany(mappedBy = "libros")
     private List<ListaLectura> listasLectura;
+    
+    // Constructor vacío requerido por JPA
+    public Libro() {
+    }
 
     // Constructor con todos los parámetros
     public Libro(String titulo, String autor, String imagenUrl, String sinopsis, String googleBooksId) {

@@ -60,7 +60,7 @@ public class LibroService {
     }
 
     // Añadir un libro a la lista del usuario si existe en Google Books
-    public Libro añadirLibroALaLista(String titulo, String autor) {
+    public Libro añadirLibro(String titulo, String autor) {
         List<BookDTO> librosEncontrados = buscarLibrosEnGoogle(titulo, autor);
         if (!librosEncontrados.isEmpty()) {
             // Si el libro ya existe en la base de datos, no lo agregamos de nuevo
@@ -70,7 +70,7 @@ public class LibroService {
                 return libroExistente.get();
             } else {
                 // Si el libro no existe, lo agregamos
-                Libro libro = new Libro(libroDTO.getTitle(), String.join(", ", libroDTO.getAuthors() ), libroDTO.getSinopsis(), libroDTO.getImagenUrl(), libroDTO.getGoogleBooksId());
+                Libro libro = new Libro(libroDTO.getTitle(), String.join(", ", libroDTO.getAuthors() ),  libroDTO.getImagenUrl(),libroDTO.getSinopsis(), libroDTO.getGoogleBooksId());
                 return libroRepository.save(libro); // Guardamos el libro en la base de datos
             }
         }
