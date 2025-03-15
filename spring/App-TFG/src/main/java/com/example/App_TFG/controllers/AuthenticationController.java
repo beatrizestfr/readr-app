@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
@@ -96,7 +97,7 @@ public class AuthenticationController {
             // Llamar al servicio para manejar el registro
             authenticationService.register(
                 usuario.getEmail(),
-                usuario.getPassword(), // Contraseña cifrada desde el front
+                usuario.getPassword(), 
                 usuario.getAvatarUrl(),
                 usuario.getRoles(),
                 usuario.getNombre()

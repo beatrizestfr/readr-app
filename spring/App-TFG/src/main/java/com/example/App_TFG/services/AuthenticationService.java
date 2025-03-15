@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+
 @Service
 public class AuthenticationService {
 
@@ -22,31 +25,36 @@ public class AuthenticationService {
 
     @Autowired
     private RolRepository rolRepository;
+    
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    // Lógica de login (sin hash en el backend)
+
+    
     public Optional<Usuario> login(String email, String passwordCifrada, HttpSession session) {
 
         Optional<Usuario> usuario = usuarioRepository.findByEmail(email); 
-        if (usuario.isPresent() && passwordCifrada.equals(usuario.get().getPassword())) {
+        if (usuario.isPresent() && passwordEncoder.matches(passwordCifrada, usuario.get().getPassword())) {
             session.setAttribute("usuario", usuario.get());  // Guardar el usuario en la sesión
             return usuario;
         }
         return Optional.empty(); // Usuario o contraseña incorrectos
     }
   
-    public void register(String email, String contraCifrada, String avatarUrl, List<Rol> roles, String nombre) {
-        System.out.println("Parámetros recibidos en el servicio: email=" + email + ", password=" + contraCifrada);
+    public void register(String email, String contra, String avatarUrl, List<Rol> roles, String nombre) {
+        System.out.println("Parámetros recibidos en el servicio: email=" + email + ", password=" + contra);
 
         // Verificar si el correo ya está registrado
         Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(email);
         if (usuarioExistente.isPresent()) {
             throw new IllegalArgumentException("El correo electrónico ya está registrado.");
         }
+        
+        String contraCifrada = passwordEncoder.encode(contra);
 
         // Crear una nueva instancia de Usuario
         Usuario nuevoUsuario = new Usuario( nombre,  email,  contraCifrada,  roles,  avatarUrl);
         nuevoUsuario.setEmail(email);
-        nuevoUsuario.setPassword(contraCifrada); // Asignar directamente la contraseña cifrada
+        nuevoUsuario.setPassword(contraCifrada);
 
         // Asignar un avatar por defecto si no se proporciona
         if (avatarUrl == null || avatarUrl.isEmpty()) {
