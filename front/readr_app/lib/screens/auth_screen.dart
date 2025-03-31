@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AuthScreen extends StatefulWidget {
+  // estado mutable , cambia entre login y register
   const AuthScreen({super.key});
 
   @override
@@ -10,6 +11,7 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  // variales de estado
   bool isLogin = true; // Controla si estamos en login o registro
   final _formKey = GlobalKey<FormState>(); // Llave para validar el formulario
   final TextEditingController emailController = TextEditingController();
@@ -40,9 +42,13 @@ class _AuthScreenState extends State<AuthScreen> {
       print("Cuerpo de la respuesta: ${response.body}");
 
       if (response.statusCode == 200) {
-        var data = jsonDecode(response.body);
-        print("Inicio de sesión exitoso: ${data["message"]}");
-        Navigator.pushReplacementNamed(context, "/perfil_screen");
+        //var data = jsonDecode(response
+        // .body); //Convierte la respuesta del servidor de JSON a un objeto de Dart.
+        String responseBody = response.body; // Respuesta como texto
+        print('Respuesta del servidor: $responseBody');
+
+        // print("Inicio de sesión exitoso: ${data["message"]}");
+        Navigator.pushReplacementNamed(context, "/home");
       } else {
         print("Error en el login: ${response.body}");
       }
@@ -51,18 +57,20 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  Future<void> registerUser(String name, String email, String password) async {
+  Future<void> registerUser(
+      String nombre, String email, String password) async {
     try {
       final response = await http.post(
         Uri.parse("$apiUrl/register"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"name": name, "email": email, "password": password}),
+        body: jsonEncode(
+            {"email": email, "password": password, "nombre": nombre}),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         var data = jsonDecode(response.body);
         print("Registro exitoso: ${data["message"]}");
-        Navigator.pushReplacementNamed(context, "/perfil_screen");
+        Navigator.pushReplacementNamed(context, "/home");
       } else {
         print("Error en el registro: ${response.body}");
       }
@@ -71,84 +79,137 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  bool _obscurePassword = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  isLogin ? "Iniciar Sesión" : "Registro",
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                if (!isLogin)
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: "Nombre"),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "El nombre es obligatorio";
-                      }
-                      return null;
-                    },
-                  ),
-                TextFormField(
-                  controller: emailController,
-                  decoration:
-                      const InputDecoration(labelText: "Correo Electrónico"),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "El correo es obligatorio";
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: passwordController,
-                  decoration: const InputDecoration(labelText: "Contraseña"),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.length < 6) {
-                      return "La contraseña debe tener al menos 6 caracteres";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      String email = emailController.text.trim();
-                      String password = passwordController.text.trim();
-                      String name = nameController.text.trim();
-
-                      if (isLogin) {
-                        loginUser(email, password);
-                      } else {
-                        registerUser(name, email, password);
-                      }
-                    }
-                  },
-                  child: Text(isLogin ? "Iniciar Sesión" : "Registrarse"),
-                ),
-                TextButton(
-                  onPressed: toggleAuthMode,
-                  child: Text(isLogin
-                      ? "¿No tienes cuenta? Regístrate"
-                      : "¿Ya tienes cuenta? Inicia sesión"),
-                ),
-              ],
+      resizeToAvoidBottomInset: true,
+      body: Column(
+        children: [
+          const SizedBox(height: 40),
+          // Imagen en la parte superior
+          Container(
+            width: double.infinity,
+            height:
+                MediaQuery.of(context).size.height * 0.3, // Menos de un tercio
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(
+                    "assets/logo2.png"), // Asegúrate de que el archivo esté en tu proyecto
+              ),
             ),
           ),
-        ),
+          // Formulario dentro de una caja con borde negro
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(
+                    30.0), // Espacio entre el formulario y la pantalla
+                child: Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black), // Borde negro
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isLogin ? "Iniciar Sesión" : "Registro",
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        if (!isLogin)
+                          TextFormField(
+                            controller: nameController,
+                            decoration:
+                                const InputDecoration(labelText: "Nombre"),
+                            validator: (value) => value == null || value.isEmpty
+                                ? "El nombre es obligatorio"
+                                : null,
+                          ),
+                        TextFormField(
+                          controller: emailController,
+                          decoration: const InputDecoration(
+                              labelText: "Correo Electrónico"),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) => value == null || value.isEmpty
+                              ? "El correo es obligatorio"
+                              : null,
+                        ),
+                        TextFormField(
+                          controller: passwordController,
+                          decoration: InputDecoration(
+                            labelText: "Contraseña",
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                          ),
+                          obscureText:
+                              _obscurePassword, // Aquí se controla si el texto está oculto o visible
+                          validator: (value) => value == null ||
+                                  value.length < 6
+                              ? "La contraseña debe tener al menos 6 caracteres"
+                              : null,
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              String email = emailController.text.trim();
+                              String password = passwordController.text.trim();
+                              String name = nameController.text.trim();
+                              if (isLogin) {
+                                loginUser(email, password);
+                              } else {
+                                registerUser(name, email, password);
+                              }
+                            }
+                          },
+                          child: Text(
+                            isLogin ? "Iniciar Sesión" : "Registrarse",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Color.fromARGB(255, 0, 0, 0),
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: toggleAuthMode,
+                          child: Text(
+                            isLogin
+                                ? "¿No tienes cuenta? Regístrate"
+                                : "¿Ya tienes cuenta? Inicia sesión",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Color.fromARGB(255, 0, 0, 0),
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

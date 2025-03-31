@@ -32,7 +32,7 @@ public class Usuario {
 	    private LocalDateTime fechaRegistro;
 
 	    // Relación con los roles (ManyToMany)
-	    @ManyToMany
+	    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	    @JoinTable(
 	        name = "usuario_rol", 
 	        joinColumns = @JoinColumn(name = "usuario_id"), 

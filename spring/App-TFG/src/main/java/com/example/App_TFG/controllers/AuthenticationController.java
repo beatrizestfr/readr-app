@@ -16,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,24 +78,44 @@ public class AuthenticationController {
  
  // Ruta para el registro
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody Usuario usuario) {
-        try {
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Usuario usuario) {
+        Map<String, Object> response = new HashMap<>();
+
+    	try {
         	System.out.println("Datos recibidos en el controlador: " + usuario);
         	System.out.println("Datos recibidos en el controlador: email=" + usuario.getEmail() + ", password=" + usuario.getPassword());
         	
+        	
         	// planteo ls utilixscion de rdye metodo y di borrarlo, ver funcionmamiento din el .
+//        	 if (usuario.getRoles() != null) {
+//                 for (Rol rol : usuario.getRoles()) {
+//                     if (rol.getIdRol() == null) { // Si el rol no tiene ID, buscarlo por nombre
+//                         Optional<Rol> rolExistente = rolRepository.findByNombre(rol.getNombre());
+//                         if (rolExistente.isPresent()) {
+//                             rol.setIdRol(rolExistente.get().getIdRol()); // Asignar el ID del rol existente
+//                         } else {
+//                             rolRepository.save(rol); // Guardar el rol si no existe
+//                         }
+//                     }
+//                 }
+//             }
+        	 
         	 if (usuario.getRoles() != null) {
+                 List<Rol> rolesPersistidos = new ArrayList<>();
                  for (Rol rol : usuario.getRoles()) {
-                     if (rol.getIdRol() == null) { // Si el rol no tiene ID, buscarlo por nombre
-                         Optional<Rol> rolExistente = rolRepository.findByNombre(rol.getNombre());
-                         if (rolExistente.isPresent()) {
-                             rol.setIdRol(rolExistente.get().getIdRol()); // Asignar el ID del rol existente
-                         } else {
-                             rolRepository.save(rol); // Guardar el rol si no existe
-                         }
+                     Optional<Rol> rolExistente = rolRepository.findByNombre(rol.getNombre());
+                     if (rolExistente.isPresent()) {
+                         rolesPersistidos.add(rolExistente.get());
+                     } else {
+                         rolRepository.save(rol); // Guardar nuevo rol
+                         rolesPersistidos.add(rol);
                      }
                  }
+                 usuario.setRoles(rolesPersistidos); // Asignar roles persistidos al usuario
              }
+        	 
+        	 
+        	 
             // Llamar al servicio para manejar el registro
             authenticationService.register(
                 usuario.getEmail(),
@@ -104,18 +126,23 @@ public class AuthenticationController {
             );
 
             // Responder con éxito
-            return ResponseEntity.ok("Registro exitoso. Rol asignado: " +
-                    (usuario.getRoles() != null && !usuario.getRoles().isEmpty()
-                            ? usuario.getRoles().get(0).getNombre()
-                            : "User (por defecto)"));
-        } catch (IllegalArgumentException e) {
-            // Manejar errores de negocio
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-        	System.out.printf("Error al registrar usuario: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error inesperado: " + e.getMessage());
-        }
+            // Construir respuesta JSON
+            response.put("message", "Registro exitoso");
+            response.put("nombre", usuario.getNombre());
+            response.put("email", usuario.getEmail());
+            response.put("role", usuario.getRoles() != null && !usuario.getRoles().isEmpty()
+                    ? usuario.getRoles().get(0).getNombre()
+                    : "User (por defecto)");
+    	
+    	return ResponseEntity.ok(response);
+    } catch (IllegalArgumentException e) {
+        response.put("error", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    } catch (Exception e) {
+        System.err.println("Error al registrar usuario: " + e);
+        response.put("error", "Error inesperado: " + e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
     }
     
  // Ruta para cerrar sesión (log out)

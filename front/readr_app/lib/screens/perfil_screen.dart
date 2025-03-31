@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 class PerfilScreen extends StatelessWidget {
+  const PerfilScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Perfil")),
-      body: Center(child: Text("Bienvenido a tu perfil")),
+    return const Scaffold(
+      body: Center(child: Text("Perfil Screen")),
     );
   }
 }
