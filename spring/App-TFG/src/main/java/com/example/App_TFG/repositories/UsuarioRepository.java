@@ -11,6 +11,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     // Método para buscar un usuario por su nombre de usuario
     Optional<Usuario> findByNombre(String nombre);
+    
+    Optional<Usuario> findById(int id);
+
 
     // Método para buscar un usuario por su email
     Optional<Usuario> findByEmail(String email);

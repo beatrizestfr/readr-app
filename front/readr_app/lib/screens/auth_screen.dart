@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 class AuthScreen extends StatefulWidget {
   // estado mutable , cambia entre login y register
   const AuthScreen({super.key});
@@ -26,12 +28,14 @@ class _AuthScreenState extends State<AuthScreen> {
     });
   }
 
-  Future<void> loginUser(String email, String password) async {
+  Future<void> loginUser(
+      String email, String password, BuildContext context) async {
     try {
       print("Datos enviados: ${jsonEncode({
             "email": email,
             "password": password
           })}");
+
       final response = await http.post(
         Uri.parse("$apiUrl/login"),
         headers: {"Content-Type": "application/json"},
@@ -42,12 +46,17 @@ class _AuthScreenState extends State<AuthScreen> {
       print("Cuerpo de la respuesta: ${response.body}");
 
       if (response.statusCode == 200) {
-        //var data = jsonDecode(response
-        // .body); //Convierte la respuesta del servidor de JSON a un objeto de Dart.
-        String responseBody = response.body; // Respuesta como texto
-        print('Respuesta del servidor: $responseBody');
+        final Map<String, dynamic> data = jsonDecode(response.body);
 
-        // print("Inicio de sesión exitoso: ${data["message"]}");
+        // Guardar ID y nombre en SharedPreferences
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('userId', data['id']);
+        await prefs.setString('userName', data['nombre']);
+
+        print('ID guardado: ${data['id']}');
+        print('Nombre guardado: ${data['nombre']}');
+
+        // Ir a la pantalla principal
         Navigator.pushReplacementNamed(context, "/home");
       } else {
         print("Error en el login: ${response.body}");
@@ -57,8 +66,8 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  Future<void> registerUser(
-      String nombre, String email, String password) async {
+  Future<void> registerUser(String nombre, String email, String password,
+      BuildContext context) async {
     try {
       final response = await http.post(
         Uri.parse("$apiUrl/register"),
@@ -68,8 +77,14 @@ class _AuthScreenState extends State<AuthScreen> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        var data = jsonDecode(response.body);
+        final Map<String, dynamic> data = jsonDecode(response.body);
         print("Registro exitoso: ${data["message"]}");
+
+// Guardar ID y nombre en SharedPreferences
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('userId', data['id']);
+        await prefs.setString('userName', data['nombre']);
+
         Navigator.pushReplacementNamed(context, "/home");
       } else {
         print("Error en el registro: ${response.body}");
@@ -175,9 +190,9 @@ class _AuthScreenState extends State<AuthScreen> {
                               String password = passwordController.text.trim();
                               String name = nameController.text.trim();
                               if (isLogin) {
-                                loginUser(email, password);
+                                loginUser(email, password, context);
                               } else {
-                                registerUser(name, email, password);
+                                registerUser(name, email, password, context);
                               }
                             }
                           },

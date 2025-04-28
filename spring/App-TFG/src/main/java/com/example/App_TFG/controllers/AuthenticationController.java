@@ -38,41 +38,45 @@ public class AuthenticationController {
     
     // Ruta para el login
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Map<String, String> requestBody, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> requestBody, HttpSession session) {
         try {
-            // Extraer los datos del cuerpo de la solicitud
             String email = requestBody.get("email");
             String password = requestBody.get("password");
 
             if (email == null || password == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("El email y la contraseña son obligatorios.");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "El email y la contraseña son obligatorios.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
 
-            // Intentar realizar el login
             Optional<Usuario> usuarioOptional = authenticationService.login(email, password, session);
 
             if (usuarioOptional.isPresent()) {
                 Usuario usuario = usuarioOptional.get();
-
-                // **ALMACENAR USUARIO EN LA SESIÓN**
                 session.setAttribute("usuario", usuario); 
                 logger.info("Usuario autenticado y guardado en la sesión: " + usuario.getIdUsuario());
 
-                if (authenticationService.isAdmin(usuario)) {
-                    return ResponseEntity.ok("Login exitoso, rol: Admin");
-                } else {
-                    return ResponseEntity.ok("Login exitoso, rol: User");
-                }
+                String rol = authenticationService.isAdmin(usuario) ? "Admin" : "User";
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("mensaje", "Login exitoso");
+                response.put("rol", rol);
+                response.put("id", usuario.getIdUsuario());
+                response.put("nombre", usuario.getNombre());
+
+                return ResponseEntity.ok(response);
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("Credenciales incorrectas");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Credenciales incorrectas");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error inesperado: " + e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error inesperado: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
 
 
  

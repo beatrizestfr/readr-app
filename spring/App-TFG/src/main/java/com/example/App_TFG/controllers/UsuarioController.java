@@ -2,11 +2,13 @@ package com.example.App_TFG.controllers;
 
 import com.example.App_TFG.dto.UsuarioDTO;
 import com.example.App_TFG.entidades.Usuario;
+import com.example.App_TFG.repositories.UsuarioRepository;
 import com.example.App_TFG.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,43 +17,60 @@ import java.util.stream.Collectors;
 @RestController // Indica que esta clase es un controlador de una API REST
 @RequestMapping("/api/usuarios") // Define la ruta base para este controlador
 public class UsuarioController {
+	
+	 private final UsuarioRepository usuarioRepository;
+
+	    @Autowired
+	    public UsuarioController(UsuarioRepository usuarioRepository) {
+	        this.usuarioRepository = usuarioRepository;
+	    }
 // manejará las peticiones HTTP relacionadas con las operaciones que puedes realizar con los usuarios, como la creación, autenticación, seguimiento, etc.
     @Autowired
     private UsuarioService usuarioService; // Inyecta el servicio de Usuario para la lógica de negocio
 
-
+    @GetMapping("/detalle/{id}") // Ruta para obtener detalles de perfil de un usuario
+    public ResponseEntity<UsuarioDTO> obtenerDetalleUsuario(@PathVariable Integer id) {
+        Optional<UsuarioDTO> usuarioOpt = usuarioService.obtenerUsuarioPorId(id);
+        
+        if (usuarioOpt.isPresent()) {
+            return new ResponseEntity<>(usuarioOpt.get(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 
     // Buscar un usuario por su ID
     @GetMapping("/{id}") // Asocia esta acción a una petición GET en "/api/usuarios/{id}"
-    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Integer id) {
-        Optional<Usuario> usuarioOpt = usuarioService.obtenerUsuarioPorId(id); // Busca al usuario por ID
-        return usuarioOpt.map(usuario -> new ResponseEntity<>(usuario, HttpStatus.OK)) // Si el usuario existe
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND)); // Si no, devuelve 404 Not Found
+    public ResponseEntity<UsuarioDTO> obtenerUsuarioPorId(@PathVariable Integer id) {
+        Optional<UsuarioDTO> usuarioOpt = usuarioService.obtenerUsuarioPorId(id);
+        return usuarioOpt.map(usuario -> new ResponseEntity<>(usuario, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     // Buscar un usuario por su nombre
     @GetMapping("/nombre/{nombre}") // Asocia esta acción a una petición GET en "/api/usuarios/nombre/{nombre}"
-    public ResponseEntity<Usuario> buscarPorNombre(@PathVariable String nombre) {
-        Optional<Usuario> usuarioOpt = usuarioService.buscarPorNombre(nombre); // Busca al usuario por nombre
-        return usuarioOpt.map(usuario -> new ResponseEntity<>(usuario, HttpStatus.OK)) // Si existe, retorna 200 OK
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND)); // Si no, retorna 404 Not Found
+    public ResponseEntity<UsuarioDTO> buscarPorNombre(@PathVariable String nombre) {
+        Optional<UsuarioDTO> usuarioOpt = usuarioService.buscarPorNombre(nombre);
+        return usuarioOpt.map(usuario -> new ResponseEntity<>(usuario, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
 
 
     @PostMapping("/seguir/{idSeguir}") // Ruta para seguir a otro usuario
     public ResponseEntity<String> seguirUsuario(@RequestParam Integer idUsuario, @PathVariable Integer idSeguir) {
-        Optional<Usuario> usuarioOpt = usuarioService.obtenerUsuarioPorId(idUsuario);
-        Optional<Usuario> usuarioASeguirOpt = usuarioService.obtenerUsuarioPorId(idSeguir);
+        Optional<UsuarioDTO> usuarioOpt = usuarioService.obtenerUsuarioPorId(idUsuario);
+        Optional<UsuarioDTO> usuarioASeguirOpt = usuarioService.obtenerUsuarioPorId(idSeguir);
 
         if (usuarioOpt.isPresent() && usuarioASeguirOpt.isPresent()) {
-            Usuario usuario = usuarioOpt.get();
-            Usuario usuarioASeguir = usuarioASeguirOpt.get();
+            UsuarioDTO usuarioDTO = usuarioOpt.get();
+            UsuarioDTO usuarioASeguirDTO = usuarioASeguirOpt.get();
             
-            usuarioService.seguirUsuario(usuario, usuarioASeguir);
+            // Usar los DTO para seguir al usuario 
+            usuarioService.seguirUsuario(usuarioDTO, usuarioASeguirDTO);
 
-            // Mensaje personalizado con los nombres
-            String mensaje = usuario.getNombre() + " ahora sigues a " + usuarioASeguir.getNombre();
+            // Mensaje personalizado con los nombres (usando los DTO)
+            String mensaje = usuarioDTO.getNombre() + " ahora sigues a " + usuarioASeguirDTO.getNombre();
             return new ResponseEntity<>(mensaje, HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Usuario no encontrado", HttpStatus.NOT_FOUND);
@@ -61,22 +80,24 @@ public class UsuarioController {
 
     @PostMapping("/dejarDeSeguir/{idSeguir}") // Ruta para dejar de seguir a un usuario
     public ResponseEntity<String> dejarDeSeguir(@RequestParam Integer idUsuario, @PathVariable Integer idSeguir) {
-        Optional<Usuario> usuarioOpt = usuarioService.obtenerUsuarioPorId(idUsuario);
-        Optional<Usuario> usuarioADejarDeSeguirOpt = usuarioService.obtenerUsuarioPorId(idSeguir);
+        Optional<UsuarioDTO> usuarioOpt = usuarioService.obtenerUsuarioPorId(idUsuario);
+        Optional<UsuarioDTO> usuarioADejarDeSeguirOpt = usuarioService.obtenerUsuarioPorId(idSeguir);
 
         if (usuarioOpt.isPresent() && usuarioADejarDeSeguirOpt.isPresent()) {
-            Usuario usuario = usuarioOpt.get();
-            Usuario usuarioADejarDeSeguir = usuarioADejarDeSeguirOpt.get();
+            UsuarioDTO usuarioDTO = usuarioOpt.get();
+            UsuarioDTO usuarioADejarDeSeguirDTO = usuarioADejarDeSeguirOpt.get();
             
-            usuarioService.dejarDeSeguirUsuario(usuario, usuarioADejarDeSeguir);
+            // Usar los DTO para dejar de seguir al usuario 
+            usuarioService.dejarDeSeguirUsuario(usuarioDTO, usuarioADejarDeSeguirDTO);
 
-            // Mensaje personalizado con los nombres
-            String mensaje = usuario.getNombre() + " has dejado de seguir a " + usuarioADejarDeSeguir.getNombre();
+            // Mensaje personalizado con los nombres (usando los DTO)
+            String mensaje = usuarioDTO.getNombre() + " has dejado de seguir a " + usuarioADejarDeSeguirDTO.getNombre();
             return new ResponseEntity<>(mensaje, HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Usuario no encontrado", HttpStatus.NOT_FOUND);
         }
     }
+
 
 
     // Obtener lista de seguidores de un usuario
@@ -104,7 +125,49 @@ public class UsuarioController {
         return new ResponseEntity<>(siguiendoDTO, HttpStatus.OK);
     }
 
+    @GetMapping("/siguiendo/{idUsuarioSesion}/{idUsuarioPerfil}")
+    public ResponseEntity<Boolean> estaSiguiendo(
+            @PathVariable int idUsuarioSesion,
+            @PathVariable int idUsuarioPerfil) {
+        
+        Optional<Usuario> usuarioSesion = usuarioRepository.findById(idUsuarioSesion);
+        Optional<Usuario> usuarioPerfil = usuarioRepository.findById(idUsuarioPerfil);
+
+        if (usuarioSesion.isPresent() && usuarioPerfil.isPresent()) {
+            boolean siguiendo = usuarioSesion.get().getSiguiendo().contains(usuarioPerfil.get());
+            return ResponseEntity.ok(siguiendo);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // edicion de perfil :
+    @PutMapping("/editar/{id}")
+    public ResponseEntity<String> editarPerfil(
+            @PathVariable Integer id,
+            @RequestParam("nombre") String nombre,
+            @RequestParam(value = "avatar", required = false) MultipartFile avatarFile) {
+
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
+
+        if (usuarioOpt.isEmpty()) {
+            return new ResponseEntity<>("Usuario no encontrado", HttpStatus.NOT_FOUND);
+        }
+
+        Usuario usuario = usuarioOpt.get();
+        usuario.setNombre(nombre);
+        
+
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            // Puedes usar un servicio para subir la imagen y guardar la URL
+            String url = usuarioService.subirFotoPerfil(avatarFile);
+            usuario.setAvatarUrl(url);
+        }
+
+        usuarioRepository.save(usuario);
+        return ResponseEntity.ok("Perfil actualizado correctamente");
+    }
 
 
-}
+} 
 
