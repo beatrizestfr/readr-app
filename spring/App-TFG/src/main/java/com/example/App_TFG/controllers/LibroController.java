@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -43,5 +44,13 @@ public class LibroController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Si no se encuentra el libro
         }
     }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<Libro> obtenerLibroPorId(@PathVariable Integer id) {
+        Optional<Libro> libroOpt = libroService.obtenerPorId(id);
+        return libroOpt.map(libro -> new ResponseEntity<>(libro, HttpStatus.OK))
+                       .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
 }
 

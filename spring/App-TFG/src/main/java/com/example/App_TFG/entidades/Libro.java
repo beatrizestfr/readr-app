@@ -3,6 +3,9 @@ package com.example.App_TFG.entidades;
 import jakarta.persistence.*;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "libros")
 public class Libro {
@@ -27,6 +30,8 @@ public class Libro {
 
     // Relación Muchos a Muchos con ListaLectura
     @ManyToMany(mappedBy = "libros")
+    @JsonIgnoreProperties("listasLectura") 
+    @JsonBackReference
     private List<ListaLectura> listasLectura;
     
     // Constructor vacío requerido por JPA

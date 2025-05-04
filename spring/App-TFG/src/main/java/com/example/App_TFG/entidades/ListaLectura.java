@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "lista_lectura")
@@ -33,6 +34,7 @@ public class ListaLectura {
         joinColumns = @JoinColumn(name = "id_lista"),
         inverseJoinColumns = @JoinColumn(name = "id_libro")
     )
+    @JsonManagedReference
     private List<Libro> libros; 
     
     @Column(name = "nombre_lista", nullable = false, length = 255)

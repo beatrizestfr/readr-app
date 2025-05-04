@@ -76,4 +76,9 @@ public class LibroService {
         }
         return null; // Retorna null si no se encuentra ningún libro
     }
+    
+    public Optional<Libro> obtenerPorId(Integer id) {
+        return libroRepository.findById(id);
+    }
+
 }

@@ -37,9 +37,9 @@ class _PerfilAjenoScreenState extends State<PerfilAjenoScreen> {
   Future<void> _obtenerDatosUsuario() async {
     // Obtén los seguidores y seguidos desde el backend
     final seguidoresResponse = await http.get(Uri.parse(
-        'http://10.0.2.2:8080/api/usuarios/seguidores/${widget.usuarioP.id}'));
+        'http://10.0.2.2:8080/api/usuarios/seguidores/${widget.usuarioP.idUsuario}'));
     final seguidosResponse = await http.get(Uri.parse(
-        'http://10.0.2.2:8080/api/usuarios/siguiendo/${widget.usuarioP.id}'));
+        'http://10.0.2.2:8080/api/usuarios/siguiendo/${widget.usuarioP.idUsuario}'));
 
     if (seguidoresResponse.statusCode == 200 &&
         seguidosResponse.statusCode == 200) {
@@ -64,7 +64,7 @@ class _PerfilAjenoScreenState extends State<PerfilAjenoScreen> {
 
     if (idUsuarioSesion != null) {
       final url =
-          'http://10.0.2.2:8080/api/usuarios/siguiendo/$idUsuarioSesion/${widget.usuarioP.id}';
+          'http://10.0.2.2:8080/api/usuarios/siguiendo/$idUsuarioSesion/${widget.usuarioP.idUsuario}';
 
       final response = await http.get(Uri.parse(url));
 
@@ -83,8 +83,8 @@ class _PerfilAjenoScreenState extends State<PerfilAjenoScreen> {
     final prefs = await SharedPreferences.getInstance();
     final idUsuarioSesion = prefs.getInt('userId');
     final url = siguiendo
-        ? 'http://10.0.2.2:8080/api/usuarios/dejarDeSeguir/${widget.usuarioP.id}'
-        : 'http://10.0.2.2:8080/api/usuarios/seguir/${widget.usuarioP.id}';
+        ? 'http://10.0.2.2:8080/api/usuarios/dejarDeSeguir/${widget.usuarioP.idUsuario}'
+        : 'http://10.0.2.2:8080/api/usuarios/seguir/${widget.usuarioP.idUsuario}';
 
     final response = await http.post(Uri.parse(url), body: {
       'idUsuario': idUsuarioSesion.toString(),
@@ -133,7 +133,7 @@ class _PerfilAjenoScreenState extends State<PerfilAjenoScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => SeguidoresScreen(
-                                      idUsuario: widget.usuarioP.id),
+                                      idUsuario: widget.usuarioP.idUsuario),
                                 ),
                               );
                             },
@@ -153,7 +153,7 @@ class _PerfilAjenoScreenState extends State<PerfilAjenoScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => SeguidosScreen(
-                                      idUsuario: widget.usuarioP.id),
+                                      idUsuario: widget.usuarioP.idUsuario),
                                 ),
                               );
                             },

@@ -1,5 +1,6 @@
 package com.example.App_TFG.controllers;
 
+import com.example.App_TFG.entidades.Libro;
 import com.example.App_TFG.entidades.ListaLectura;
 import com.example.App_TFG.entidades.Usuario;
 import com.example.App_TFG.services.ListaLecturaService;
@@ -17,7 +18,9 @@ import org.springframework.web.server.ResponseStatusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 @RestController
 @RequestMapping("/api/listas-lectura")
@@ -153,5 +156,58 @@ public class ListaLecturaController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Error si la lista o el libro no se encuentran
         }
     }
+
+    @GetMapping("/read")
+    public ResponseEntity<List<Libro>> obtenerLibrosLeidos(HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (usuario == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        Optional<ListaLectura> listaRead = listaLecturaService
+            .obtenerListaPorNombreYUsuario("Read", usuario);
+
+        if (listaRead.isPresent()) {
+            return new ResponseEntity<>(listaRead.get().getLibros(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+    
+    @GetMapping("/libros/id/{idLista}")
+    public ResponseEntity<List<Libro>> obtenerLibrosDeListaPorId(
+            @PathVariable Integer idLista,
+            HttpSession session) {
+
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (usuario == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        Optional<ListaLectura> listaOpt = listaLecturaService.obtenerListaPorId(idLista);
+
+        if (listaOpt.isPresent() && listaOpt.get().getUsuario().getIdUsuario().equals(usuario.getIdUsuario())) {
+            return new ResponseEntity<>(listaOpt.get().getLibros(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+    @GetMapping("/listas-predeterminadas")
+    public ResponseEntity<Map<String, Integer>> obtenerListasPredeterminadas(HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+
+        if (usuario == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        Map<String, Integer> listas = new HashMap<>();
+        listas.put("To Read", listaLecturaService.obtenerListaPorNombreYUsuario("To Read", usuario).map(ListaLectura::getIdLista).orElse(null));
+        listas.put("Reading", listaLecturaService.obtenerListaPorNombreYUsuario("Reading", usuario).map(ListaLectura::getIdLista).orElse(null));
+        listas.put("Read", listaLecturaService.obtenerListaPorNombreYUsuario("Read", usuario).map(ListaLectura::getIdLista).orElse(null));
+
+        return new ResponseEntity<>(listas, HttpStatus.OK);
+    }
+
+
 
 }

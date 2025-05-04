@@ -206,5 +206,11 @@ public class ListaLecturaService {
         }
     }
 
+    public Optional<ListaLectura> obtenerListaPorNombreYUsuario(String nombreLista, Usuario usuario) {
+        return listaLecturaRepository.findByNombreListaAndUsuario(nombreLista, usuario);
+    }
+    public Optional<ListaLectura> obtenerListaPorId(Integer idLista) {
+        return listaLecturaRepository.findById(idLista);
+    }
 
 }

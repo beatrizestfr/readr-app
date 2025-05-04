@@ -5,6 +5,7 @@ import com.example.App_TFG.entidades.Usuario;
 import com.example.App_TFG.repositories.RolRepository;
 import com.example.App_TFG.services.AuthenticationService;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -37,8 +38,9 @@ public class AuthenticationController {
     private  RolRepository rolRepository ;
     
     // Ruta para el login
+ // Añadir un HttpOnly y Secure cookie para manejar la sesión
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> requestBody, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> requestBody, HttpSession session, HttpServletResponse response) {
         try {
             String email = requestBody.get("email");
             String password = requestBody.get("password");
@@ -53,18 +55,26 @@ public class AuthenticationController {
 
             if (usuarioOptional.isPresent()) {
                 Usuario usuario = usuarioOptional.get();
-                session.setAttribute("usuario", usuario); 
+                session.setAttribute("usuario", usuario);
+
+                // Crear una cookie de sesión con HttpOnly y Secure activados
+                Cookie cookie = new Cookie("JSESSIONID", session.getId());
+                cookie.setHttpOnly(true);  // Solo accesible desde el servidor
+                cookie.setSecure(true);    // Solo enviada por HTTPS
+                cookie.setPath("/");       // Válida para todo el dominio
+                response.addCookie(cookie);
+
                 logger.info("Usuario autenticado y guardado en la sesión: " + usuario.getIdUsuario());
 
                 String rol = authenticationService.isAdmin(usuario) ? "Admin" : "User";
 
-                Map<String, Object> response = new HashMap<>();
-                response.put("mensaje", "Login exitoso");
-                response.put("rol", rol);
-                response.put("id", usuario.getIdUsuario());
-                response.put("nombre", usuario.getNombre());
+                Map<String, Object> responseMap = new HashMap<>();
+                responseMap.put("mensaje", "Login exitoso");
+                responseMap.put("rol", rol);
+                responseMap.put("id", usuario.getIdUsuario());
+                responseMap.put("nombre", usuario.getNombre());
 
-                return ResponseEntity.ok(response);
+                return ResponseEntity.ok(responseMap);
             } else {
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Credenciales incorrectas");
@@ -76,8 +86,6 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
-
-
 
  
  // Ruta para el registro

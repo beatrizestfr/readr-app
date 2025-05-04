@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/dio_client.dart';
 
 class AuthScreen extends StatefulWidget {
   // estado mutable , cambia entre login y register
@@ -19,7 +20,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
-
+  final Dio dio = Dio();
   final String apiUrl = "http://10.0.2.2:8080/auth";
 
   void toggleAuthMode() {
@@ -31,22 +32,34 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> loginUser(
       String email, String password, BuildContext context) async {
     try {
-      print("Datos enviados: ${jsonEncode({
-            "email": email,
-            "password": password
-          })}");
+      final dio = await DioClient.getInstance();
 
-      final response = await http.post(
-        Uri.parse("$apiUrl/login"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email, "password": password}),
+      final response = await dio.post(
+        "$apiUrl/login",
+        data: {
+          "email": email,
+          "password": password,
+        },
+        options: Options(
+          headers: {
+            "Content-Type": "application/json",
+          },
+        ),
       );
 
       print("Código de estado: ${response.statusCode}");
-      print("Cuerpo de la respuesta: ${response.body}");
+      print("Datos recibidos: ${response.data}");
+
+      // Imprimir las cookies de la respuesta
+      final cookies = response.headers['set-cookie'];
+      if (cookies != null && cookies.isNotEmpty) {
+        print('JSESSIONID: ${cookies[0]}');
+      } else {
+        print('No se encontró JSESSIONID en las cookies');
+      }
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
+        final data = response.data;
 
         // Guardar ID y nombre en SharedPreferences
         final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -59,10 +72,12 @@ class _AuthScreenState extends State<AuthScreen> {
         // Ir a la pantalla principal
         Navigator.pushReplacementNamed(context, "/home");
       } else {
-        print("Error en el login: ${response.body}");
+        print("Error en el login: ${response.statusMessage}");
       }
+    } on DioException catch (e) {
+      print("Error de Dio: ${e.response?.statusCode} - ${e.response?.data}");
     } catch (error) {
-      print("Error de conexión: $error");
+      print("Error general: $error");
     }
   }
 

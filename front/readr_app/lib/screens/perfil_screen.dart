@@ -4,7 +4,14 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'seguidores_screen.dart';
 import 'seguidos_screen.dart';
+import 'Lista.dart';
+import 'LibroDetalle_screen.dart';
+import 'Libro.dart';
 import 'editasP_screen.dart';
+import 'listaListaslibros_screen.dart';
+import '../core/dio_client.dart';
+import 'package:dio/dio.dart';
+import 'listaLecturaDetalles_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -19,14 +26,25 @@ class _PerfilScreenState extends State<PerfilScreen> {
   int seguidos = 0;
   String nombreUsuario = "";
 
+  List<Lista> listas = [];
+  List<Libro> libros = [];
+
   int? idUsuario;
 
   final String baseUrl = 'http://10.0.2.2:8080/api/usuarios';
+  Dio? dio;
 
   @override
   void initState() {
     super.initState();
+    _initializeDio();
     cargarIdUsuario();
+  }
+
+  // Método para inicializar Dio
+  Future<void> _initializeDio() async {
+    dio = await DioClient.getInstance(); // Ahora se obtiene de forma asíncrona
+    // Llama al API o lo que necesites hacer después de que dio esté listo
   }
 
   Future<void> cargarIdUsuario() async {
@@ -41,6 +59,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       });
 
       await cargarDatosPerfil();
+      await cargarListasYLibros();
     } else {
       print("No se encontró el ID del usuario en SharedPreferences.");
     }
@@ -98,6 +117,72 @@ class _PerfilScreenState extends State<PerfilScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Error al cargar los datos del perfil'),
       ));
+    }
+  }
+
+  Future<void> cargarListasYLibros() async {
+    try {
+      final dio = await DioClient.getInstance();
+
+      if (dio != null) {
+        // Añadir interceptor de debugging (opcional)
+        dio.interceptors.add(InterceptorsWrapper(
+          onRequest: (options, handler) {
+            print('📤 Request: ${options.uri}');
+            print('🧾 Headers: ${options.headers}');
+            return handler.next(options);
+          },
+          onResponse: (response, handler) {
+            print('✅ Response: ${response.statusCode}');
+            print('🍪 Cookies: ${response.headers['set-cookie']}');
+            return handler.next(response);
+          },
+          onError: (e, handler) {
+            print('❌ Error: ${e.response?.statusCode}');
+            return handler.next(e);
+          },
+        ));
+
+        // Obtener listas de lectura
+        final responseListas = await dio.get(
+          'http://10.0.2.2:8080/api/listas-lectura',
+          options: Options(
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          ),
+        );
+
+        // Obtener libros de la lista "Read"
+        final responseLibros = await dio.get(
+          'http://10.0.2.2:8080/api/listas-lectura/read',
+          options: Options(
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          ),
+        );
+        // Comprobamos si las respuestas son correctas
+        if (responseListas.statusCode == 200) {
+          final data = responseListas.data as List;
+          listas = data.map((item) => Lista.fromJson(item)).toList();
+        } else {
+          print("Error al obtener listas: ${responseListas.statusCode}");
+        }
+
+        if (responseLibros.statusCode == 200) {
+          final data = responseLibros.data as List;
+          libros = data.map((item) => Libro.fromJson(item)).toList();
+        } else {
+          print("Error al obtener libros: ${responseLibros.statusCode}");
+        }
+
+        setState(() {}); // Refresca la UI
+      } else {
+        print("Dio es nulo, no se pueden hacer las solicitudes");
+      }
+    } catch (e) {
+      print("Error al cargar listas/libros: $e");
     }
   }
 
@@ -201,82 +286,177 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 color: Colors.blue,
               ),
               const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+              // LISTAS
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Listas',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Listas',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const listaListaslibros_screen(),
+                              ),
+                            );
+                          },
+                          child: const Text('Ver más'),
+                        ),
+                      ],
+                    ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      // Navegar a pantalla de listas
-                    },
-                    child: const Text('Ver todo'),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 120,
+                    child: listas.isNotEmpty
+                        ? ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: listas.length,
+                            itemBuilder: (context, index) {
+                              final lista = listas[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ListaLecturaDetallesScreen(
+                                        idLista: lista.idLista,
+                                        nombreLista: lista.nombreLista,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 120,
+                                  margin: const EdgeInsets.only(right: 10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[100],
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      lista.nombreLista ?? 'Sin nombre',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : const Center(child: Text('No hay listas')),
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
-              SizedBox(
-                height: 120,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        // Ir a la pantalla de detalles de lista
-                      },
-                      child: Container(
-                        width: 100,
-                        margin: const EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[100],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Center(child: Text('Lista ${index + 1}')),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+              // LIBROS
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Libros',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      // Navegar a pantalla de libros
-                    },
-                    child: const Text('Ver todo'),
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: 120,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5,
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        // Ir a la pantalla de detalles de libro
-                      },
-                      child: Container(
-                        width: 100,
-                        margin: const EdgeInsets.only(right: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.green[100],
-                          borderRadius: BorderRadius.circular(10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Libros',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        child: Center(child: Text('Libro ${index + 1}')),
-                      ),
-                    );
-                  },
-                ),
+                        TextButton(
+                          onPressed: () {
+                            final lista = listas.firstWhere(
+                                (elemento) => elemento.nombreLista == 'Read');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ListaLecturaDetallesScreen(
+                                  idLista: lista.idLista,
+                                  nombreLista: lista.nombreLista,
+                                ),
+                              ),
+                            );
+                          },
+                          child: const Text('Ver más'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 180,
+                    child: libros.isNotEmpty
+                        ? ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: libros.length,
+                            itemBuilder: (context, index) {
+                              final libro = libros[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LibroDetalle_screen(
+                                          idLibro: libro.id),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 100,
+                                  margin: const EdgeInsets.only(right: 10),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      // Imagen del libro
+                                      Container(
+                                        height: 120,
+                                        width: 90,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          image: DecorationImage(
+                                            image: NetworkImage(
+                                                libro.imagenUrl ?? ''),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      // Título debajo de la imagen
+                                      Text(
+                                        libro.titulo ?? 'Sin título',
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : const Center(child: Text('No hay libros')),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
             ],
           ),
