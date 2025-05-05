@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
@@ -31,7 +32,7 @@ public class Libro {
     // Relación Muchos a Muchos con ListaLectura
     @ManyToMany(mappedBy = "libros")
     @JsonIgnoreProperties("listasLectura") 
-    @JsonBackReference
+    @JsonIgnore
     private List<ListaLectura> listasLectura;
     
     // Constructor vacío requerido por JPA

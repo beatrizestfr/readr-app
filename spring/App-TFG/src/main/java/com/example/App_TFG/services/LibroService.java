@@ -1,6 +1,7 @@
 package com.example.App_TFG.services;
 
 import com.example.App_TFG.dto.BookDTO;
+import com.example.App_TFG.dto.GoogleBookItem;
 import com.example.App_TFG.dto.GoogleBookVolumeInfo;
 import com.example.App_TFG.dto.GoogleBooksResponse;
 import com.example.App_TFG.entidades.Libro;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -46,7 +48,12 @@ public class LibroService {
         ResponseEntity<GoogleBooksResponse> response = restTemplate.getForEntity(url, GoogleBooksResponse.class);
 
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-            return response.getBody().getItems().stream()
+            GoogleBooksResponse googleBooksResponse = response.getBody();
+
+            // Aseguramos que items no sea null, y si es así, usamos una lista vacía
+            List<GoogleBookItem> items = googleBooksResponse.getItems() != null ? googleBooksResponse.getItems() : new ArrayList<>();
+
+            return items.stream()
                 .map(item -> {
                     GoogleBookVolumeInfo volumeInfo = item.getVolumeInfo();
 
@@ -56,8 +63,10 @@ public class LibroService {
                 })
                 .collect(Collectors.toList());
         }
-        return List.of(); // Retorna una lista vacía si no se encuentra ningún libro
+
+        return List.of(); // Retorna una lista vacía si no se encuentra ningún libro o la respuesta es incorrecta
     }
+
 
     // Añadir un libro a la lista del usuario si existe en Google Books
     public Libro añadirLibro(String titulo, String autor) {
@@ -69,6 +78,13 @@ public class LibroService {
             if (libroExistente.isPresent()) {
                 return libroExistente.get();
             } else {
+            	
+            	  // Recorte de la URL de la imagen si supera el tamaño máximo permitido
+                String imagenUrl = libroDTO.getImagenUrl();
+                int maxLength = 500;  
+                if (imagenUrl != null && imagenUrl.length() > maxLength) {
+                    imagenUrl = imagenUrl.substring(0, maxLength);  // Recorta la cadena al tamaño permitido
+                }
                 // Si el libro no existe, lo agregamos
                 Libro libro = new Libro(libroDTO.getTitle(), String.join(", ", libroDTO.getAuthors() ),  libroDTO.getImagenUrl(),libroDTO.getSinopsis(), libroDTO.getGoogleBooksId());
                 return libroRepository.save(libro); // Guardamos el libro en la base de datos

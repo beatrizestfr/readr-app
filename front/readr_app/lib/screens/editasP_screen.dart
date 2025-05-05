@@ -37,7 +37,7 @@ class _EditarPerfilState extends State<EditarPerfil> {
 
     if (_imagenSeleccionada != null) {
       request.files.add(await http.MultipartFile.fromPath(
-        'avatar',
+        'avatarUrl',
         _imagenSeleccionada!.path,
       ));
     }

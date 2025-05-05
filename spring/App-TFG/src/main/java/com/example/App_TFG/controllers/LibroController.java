@@ -34,16 +34,16 @@ public class LibroController {
 
     // Añadir libro a la base de datos 
     @PostMapping("/agregar")
-    public ResponseEntity<Void> agregar(@RequestParam String titulo, @RequestParam(required = false) String autor) {
-        // Llamada al servicio para añadir el libro a la lista del usuario
+    public ResponseEntity<Integer> agregar(@RequestParam String titulo, @RequestParam(required = false) String autor) {
         Libro libroAñadido = libroService.añadirLibro(titulo, autor);
 
         if (libroAñadido != null) {
-            return new ResponseEntity<>(HttpStatus.CREATED); // Respuesta exitosa
+            return new ResponseEntity<>(libroAñadido.getIdLibro(), HttpStatus.CREATED); // Devuelve ID
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Si no se encuentra el libro
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
     
     @GetMapping("/{id}")
     public ResponseEntity<Libro> obtenerLibroPorId(@PathVariable Integer id) {

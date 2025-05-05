@@ -49,7 +49,7 @@ class _SearchScreenState extends State<SearchScreen> {
       if (librosResponse.statusCode == 200) {
         List<dynamic> librosData = jsonDecode(librosResponse.body);
         setState(() {
-          _resultados.addAll(librosData); // Agregar libros a los resultados
+          _resultados.addAll(librosData);
         });
       }
 
@@ -64,21 +64,36 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  // Función para agregar un libro a la base de datos
-  Future<void> agregarLibro(int id) async {
-    final response = await http.post(
-      Uri.parse('http://10.0.2.2:8080/api/libros/agregar'),
-      body: {
-        'titulo':
-            'Titulo del libro', // Aquí agregas el título y autor si lo tienes.
-        'autor': 'Autor del libro',
-      },
-    );
+  // Función para agregar un libro y obtener su ID
+  Future<int?> agregarLibro(String titulo, String autor) async {
+    try {
+      print("Intentando agregar libro con título: $titulo, autor: $autor");
 
-    if (response.statusCode == 201) {
-      print("Libro agregado exitosamente");
-    } else {
-      print("Error al agregar libro");
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:8080/api/libros/agregar'),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'titulo': titulo,
+          'autor': autor,
+        },
+      );
+
+      print("Código de respuesta: ${response.statusCode}");
+      print("Respuesta: ${response.body}");
+
+      if (response.statusCode == 201) {
+        final int idLibro = int.parse(response.body);
+        print("Libro agregado exitosamente con ID: $idLibro");
+        return idLibro;
+      } else {
+        print("Error al agregar libro. Código: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Error en agregarLibro: $e");
+      return null;
     }
   }
 
@@ -129,20 +144,37 @@ class _SearchScreenState extends State<SearchScreen> {
                           // Mostrar libro
                           return ListTile(
                             title: Text(item['title'] ?? 'Sin título'),
-                            subtitle: Text(item['author'] ?? 'Sin autor'),
+                            subtitle: Text(
+                              item['authors'] is List
+                                  ? (item['authors'] as List).join(', ')
+                                  : (item['authors']?.toString() ??
+                                      'Sin autor'),
+                            ),
                             onTap: () async {
-                              // Primero agregar el libro
-                              await agregarLibro(
-                                  item['id']); // Agregar el libro
+                              final String titulo =
+                                  item['title'] ?? 'Sin título';
+                              final String autor = (item['authors'] is List)
+                                  ? (item['authors'] as List).join(', ')
+                                  : (item['authors']?.toString() ??
+                                      'Sin autor');
+                              final int? idLibro =
+                                  await agregarLibro(titulo, autor);
 
-                              // Después navegar a la pantalla de detalles
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      LibroDetalle_screen(idLibro: item['id']),
-                                ),
-                              );
+                              if (idLibro != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        LibroDetalle_screen(idLibro: idLibro),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text("No se pudo agregar el libro")),
+                                );
+                              }
                             },
                           );
                         } else {

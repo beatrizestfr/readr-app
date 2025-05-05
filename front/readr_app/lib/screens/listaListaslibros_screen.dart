@@ -79,7 +79,20 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        await _cargarListas(); // Recargar listas
+        final nuevaLista = Lista.fromJson(response.data);
+
+        // Redirige directamente a la nueva lista
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ListaLecturaDetallesScreen(
+              idLista: nuevaLista.idLista,
+              nombreLista: nuevaLista.nombreLista,
+            ),
+          ),
+        );
+
+        _cargarListas(); // Recargar al volver
       } else {
         _mostrarError("Error al crear la lista.");
       }

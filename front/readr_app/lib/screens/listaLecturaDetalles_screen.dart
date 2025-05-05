@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'Libro.dart';
+import 'SearchLibro_screen.dart';
+
 import 'LibroDetalle_screen.dart';
 import 'Lista.dart';
 import 'package:http/http.dart' as http;
@@ -112,7 +114,6 @@ class _ListaLecturaDetallesScreenState
                 final libro = libros[index];
                 return GestureDetector(
                   onTap: () {
-                    // Navegar a la pantalla de detalles del libro
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -151,6 +152,18 @@ class _ListaLecturaDetallesScreenState
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SearchLibro_screen(idLista: widget.idLista),
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
+        backgroundColor: Theme.of(context).primaryColor,
       ),
     );
   }

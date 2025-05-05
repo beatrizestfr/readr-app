@@ -34,7 +34,6 @@ public class ListaLectura {
         joinColumns = @JoinColumn(name = "id_lista"),
         inverseJoinColumns = @JoinColumn(name = "id_libro")
     )
-    @JsonManagedReference
     private List<Libro> libros; 
     
     @Column(name = "nombre_lista", nullable = false, length = 255)
