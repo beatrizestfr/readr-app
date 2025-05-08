@@ -1,5 +1,7 @@
 package com.example.App_TFG.controllers;
 
+import com.example.App_TFG.dto.ReviewDTO;
+import com.example.App_TFG.dto.ReviewResponseDTO;
 import com.example.App_TFG.entidades.Reviews;
 import com.example.App_TFG.entidades.Usuario;
 import com.example.App_TFG.services.AuthenticationService;
@@ -17,38 +19,59 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/reseñas")
+@RequestMapping("/api/resenas")
 public class ReviewsController {
 
     @Autowired
     private ReviewsService reviewsService;
-    
+
     @Autowired
     private AuthenticationService authenticationService;
 
- // Crear reseña
+    // Crear reseña
     @Transactional
     @PostMapping("/{idLibro}")
-    public ResponseEntity<Reviews> crearReseña(@PathVariable Integer idLibro, @RequestBody String contenido,  HttpSession session) {
-    	Usuario usuario = (Usuario) session.getAttribute("usuario");
+    public ResponseEntity<ReviewResponseDTO> crearReseña(@PathVariable Integer idLibro, 
+                                               @RequestBody ReviewDTO reviewDTO,
+                                               HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (usuario == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
 
-        Reviews reseñaCreada = reviewsService.crearReseña(idLibro, contenido, usuario);
-        return new ResponseEntity<>(reseñaCreada, HttpStatus.CREATED);
+        Reviews reseñaCreada = reviewsService.crearReseña(idLibro, reviewDTO, usuario);
+        return new ResponseEntity<>(new ReviewResponseDTO(reseñaCreada), HttpStatus.CREATED);
     }
 
-    // Obtener reseña por ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Reviews> obtenerReseñaPorId(@PathVariable Integer id) {
-        Optional<Reviews> reseñaOpt = reviewsService.obtenerReseñaPorId(id);
-        return reseñaOpt.map(reseña -> new ResponseEntity<>(reseña, HttpStatus.OK))
-                        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+ // Obtener reseña por ID
+    @GetMapping("/{idReseña}")
+    public ResponseEntity<ReviewResponseDTO> obtenerReseñaPorId(@PathVariable Integer idReseña) {
+        System.out.println("📥 Solicitando reseña con ID: " + idReseña);
+        
+        Optional<Reviews> reseñaOpt = reviewsService.obtenerReseñaPorId(idReseña);
+
+        if (reseñaOpt.isPresent()) {
+            Reviews reseña = reseñaOpt.get();
+            System.out.println("✅ Reseña encontrada: " + reseña.getContenido());
+            
+            ReviewResponseDTO dto = new ReviewResponseDTO(reseña);
+            System.out.println("📦 DTO creado: " + dto.getContenido() + " | Usuario: " + dto.getNombreUsuario());
+            
+            return new ResponseEntity<>(dto, HttpStatus.OK);
+        } else {
+            System.out.println("❌ No se encontró reseña con ID: " + idReseña);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
+
 
     // Obtener reseñas por libro
     @GetMapping("/libro/{idLibro}")
-    public List<Reviews> obtenerReseñasPorLibro(@PathVariable Integer idLibro) {
-        return reviewsService.obtenerReseñasPorLibro(idLibro);
+    public ResponseEntity<List<ReviewResponseDTO>> obtenerReseñasPorLibro(@PathVariable Integer idLibro) {
+        List<ReviewResponseDTO> reseñasDTO = reviewsService.obtenerReseñasPorLibro(idLibro);
+        return ResponseEntity.ok(reseñasDTO);
     }
+
 
     // Obtener reseñas por usuario
     @GetMapping("/usuario/{idUsuario}")
@@ -56,43 +79,52 @@ public class ReviewsController {
         return reviewsService.obtenerReseñasPorUsuario(idUsuario);
     }
 
- // Eliminar reseña por ID
+    // Eliminar reseña
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarReseña(@PathVariable Integer id, HttpSession session) {
-        // Obtener el usuario actual desde la sesión
-        Usuario usuarioActual = (Usuario) session.getAttribute("usuario");  // Suponiendo que el usuario se guarda en la sesión con la clave "usuario"
-        
+        Usuario usuarioActual = (Usuario) session.getAttribute("usuario");
         if (usuarioActual == null) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);  // Si el usuario no está autenticado
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
-        // Obtener la reseña a eliminar
         Optional<Reviews> reseñaOpt = reviewsService.obtenerReseñaPorId(id);
         if (reseñaOpt.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);  // Si no se encuentra la reseña
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
         Reviews reseña = reseñaOpt.get();
-        
-        // Verificar si el usuario tiene permiso para eliminar la reseña
-        if (authenticationService.isAdmin(usuarioActual) || reseña.getUsuario().getIdUsuario().equals(usuarioActual.getIdUsuario())) {
-            reviewsService.eliminarReseña(id);  // Eliminar reseña
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);  // Respuesta exitosa
-        } else {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);  // Si el usuario no tiene permiso
-        }
-    }
-    
-    // Endpoint para editar una reseña
-    @PutMapping("/{idReseña}")
-    public ResponseEntity<Reviews> editarReseña(@PathVariable Integer idReseña,
-                                                @RequestBody String nuevoContenido) {
-        try {
-            Reviews reseñaActualizada = reviewsService.editarReseña(idReseña, nuevoContenido);
-            return ResponseEntity.ok(reseñaActualizada);  // Retorna la reseña actualizada
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();  // Si no se encuentra la reseña, retorna 404
-        }
-    }
-}
 
+        if (authenticationService.isAdmin(usuarioActual) || 
+            reseña.getUsuario().getIdUsuario().equals(usuarioActual.getIdUsuario())) {
+            reviewsService.eliminarReseña(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+    }
+
+    // Editar reseña
+    @PutMapping("/{idResena}")
+    public ResponseEntity<Reviews> editarReseña(@PathVariable Integer idReseña,
+                                                @RequestBody ReviewDTO reviewDTO) {
+        try {
+            Reviews reseñaActualizada = reviewsService.editarReseña(idReseña, reviewDTO);
+            return ResponseEntity.ok(reseñaActualizada);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Feed
+    @GetMapping("/feed")
+    public ResponseEntity<List<ReviewResponseDTO>> obtenerFeed(HttpSession session) {
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (usuario == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        List<ReviewResponseDTO> feedDTO = reviewsService.obtenerFeedParaUsuario(usuario);
+        return ResponseEntity.ok(feedDTO);
+    }
+
+}

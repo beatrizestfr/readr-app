@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'Libro.dart';
 import 'Lista.dart';
 import '../core/dio_client.dart';
+import '../models/Review.dart';
 
 class LibroDetalle_screen extends StatefulWidget {
   final int idLibro;
@@ -16,14 +17,16 @@ class LibroDetalle_screen extends StatefulWidget {
 class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
   late Future<Libro> _libroFuture;
   Map<String, int> listasPredeterminadas = {};
-  String estadoLectura = "To Read"; // Estado inicial
+  String estadoLectura = ""; // Estado inicial
   bool libroFinalizado = false;
+  late Future<List<Review>> _resenasFuture;
 
   @override
   void initState() {
     super.initState();
     _libroFuture = fetchLibro();
     fetchListasPredeterminadas();
+    _resenasFuture = fetchResenas();
   }
 
   Future<Libro> fetchLibro() async {
@@ -75,7 +78,6 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
   }
 
   void checkEstadoLibro() async {
-    // Lógica para comprobar si el libro está en alguna lista
     final dio = await DioClient.getInstance();
     try {
       final response = await dio.get(
@@ -86,24 +88,15 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
         List<Lista> listas =
             (response.data as List).map((e) => Lista.fromJson(e)).toList();
 
-        // Revisamos en qué lista está el libro
         for (var lista in listas) {
-          if (lista.libros.contains(widget.idLibro)) {
-            if (lista.nombreLista == 'To Read') {
-              setState(() {
-                estadoLectura = 'To Read';
-              });
-            } else if (lista.nombreLista == 'Reading') {
-              setState(() {
-                estadoLectura = 'Reading';
-              });
-            } else if (lista.nombreLista == 'Read') {
-              setState(() {
-                estadoLectura = 'Read';
-                libroFinalizado = true; // Si está en "Read", lo deshabilitamos
-              });
-            }
-            return; // Si lo encontramos, no seguimos buscando más
+          if (lista.libros.any((libro) => libro.id == widget.idLibro)) {
+            setState(() {
+              estadoLectura = lista.nombreLista;
+              if (estadoLectura == 'Read') {
+                libroFinalizado = true;
+              }
+            });
+            return;
           }
         }
       }
@@ -175,10 +168,53 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
   }
 
   void manejarBotonLectura() {
-    if (estadoLectura == "To Read") {
+    if (estadoLectura == "") {
+      moverLibroA("To Read");
+    } else if (estadoLectura == "To Read") {
       moverLibroA("Reading");
     } else if (estadoLectura == "Reading") {
       moverLibroA("Read");
+    }
+  }
+
+  String obtenerSiguienteLista() {
+    if (estadoLectura == "") {
+      return "To Read";
+    } else if (estadoLectura == "To Read") {
+      return "Reading";
+    } else if (estadoLectura == "Reading") {
+      return "Read";
+    } else {
+      return "Read";
+    }
+  }
+
+//reseñas-------------------------------------------------------------------------------------
+
+// Obtener reseñas por libro
+  Future<List<Review>> fetchResenas() async {
+    final dio = await DioClient.getInstance();
+    print("🚀 Iniciando la solicitud para obtener las reseñas...");
+
+    try {
+      print(
+          "🔄 Realizando la petición GET a la URL: http://10.0.2.2:8080/api/resenas/libro/${widget.idLibro}");
+
+      final response = await dio
+          .get('http://10.0.2.2:8080/api/resenas/libro/${widget.idLibro}');
+      print("✅ Respuesta recibida: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        print("👍 Respuesta 200 OK: Procesando las reseñas...");
+        return (response.data as List).map((r) => Review.fromJson(r)).toList();
+      } else {
+        print(
+            "❌ Error: Código de estado no 200, estado: ${response.statusCode}");
+        throw Exception('Error al cargar reseñas');
+      }
+    } catch (e) {
+      print("⚠️ Ocurrió un error: $e");
+      throw Exception('Error: $e');
     }
   }
 
@@ -231,7 +267,8 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: libroFinalizado ? null : manejarBotonLectura,
-                        child: Text(libroFinalizado ? 'Read' : estadoLectura),
+                        child: Text(
+                            libroFinalizado ? 'Read' : obtenerSiguienteLista()),
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
                               libroFinalizado ? Colors.grey : Colors.blue,
@@ -241,23 +278,204 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
                 const SizedBox(height: 30),
 
                 // Reseña y valoración
-                Container(
-                  height: 100,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(10),
+                //boton
+                ElevatedButton.icon(
+                  onPressed: () {
+                    mostrarDialogoResena(context);
+                  },
+                  icon: Icon(Icons.add),
+                  label: Text("Añadir review"),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    backgroundColor: const Color.fromARGB(255, 138, 140, 153),
                   ),
-                  child: const Text(
-                    'Aquí irá tu reseña y valoración',
-                    style: TextStyle(color: Colors.grey),
-                  ),
+                ),
+                //lista de reseñas de otros usuarios
+                FutureBuilder<List<Review>>(
+                  future: _resenasFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Text("Error al cargar reseñas");
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Text("Aún no hay reseñas.");
+                    }
+
+                    return Column(
+                      children: snapshot.data!.map((review) {
+                        return Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage:
+                                  NetworkImage(review.avatarUsuario),
+                            ),
+                            title: Row(
+                              children: List.generate(
+                                5,
+                                (i) => Icon(
+                                  i < review.rating
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  review.nombreUsuario,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(review.contenido),
+                                SizedBox(height: 4),
+                                Text(
+                                  "Publicado el ${review.fecha.day}/${review.fecha.month}/${review.fecha.year}",
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
                 ),
               ],
             ),
           );
         },
       ),
+    );
+  }
+
+  void mostrarDialogoResena(BuildContext context) {
+    int estrellasSeleccionadas = 0;
+    TextEditingController controllerTexto = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: Text("Nueva reseña"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < estrellasSeleccionadas
+                              ? Icons.star
+                              : Icons.star_border,
+                          color: Colors.amber,
+                        ),
+                        onPressed: () {
+                          setStateDialog(() {
+                            estrellasSeleccionadas = index + 1;
+                            print(
+                                "Estrellas seleccionadas: $estrellasSeleccionadas");
+                          });
+                        },
+                      );
+                    }),
+                  ),
+                  TextField(
+                    controller: controllerTexto,
+                    decoration:
+                        InputDecoration(hintText: "Escribe tu reseña..."),
+                    maxLines: 3,
+                    onChanged: (value) {
+                      print("Texto de reseña actualizado: $value");
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  child: Text("Cancelar"),
+                  onPressed: () {
+                    print("Diálogo cancelado");
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ElevatedButton(
+                  child: Text("Enviar"),
+                  onPressed: () async {
+                    if (estrellasSeleccionadas < 1) {
+                      // Mostrar error si no hay estrellas seleccionadas
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text("Error"),
+                          content: Text(
+                              "Por favor, selecciona al menos una estrella."),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text("OK"),
+                            ),
+                          ],
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (controllerTexto.text.trim().isEmpty) {
+                      // Mostrar error si el texto está vacío
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text("Error"),
+                          content: Text("Por favor, escribe una reseña."),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text("OK"),
+                            ),
+                          ],
+                        ),
+                      );
+                      return;
+                    }
+                    print("Enviando reseña...");
+                    print("Texto: ${controllerTexto.text}");
+                    print("Estrellas: $estrellasSeleccionadas");
+                    final dio = await DioClient.getInstance();
+                    try {
+                      await dio.post(
+                        'http://10.0.2.2:8080/api/resenas/${widget.idLibro}',
+                        data: {
+                          'rating': estrellasSeleccionadas,
+                          'contenido': controllerTexto.text,
+                        },
+                      );
+                      print("Reseña enviada correctamente.");
+                    } catch (e) {
+                      print("Error al enviar la reseña: $e");
+                    }
+                    Navigator.of(context).pop();
+                    setState(() {
+                      print("Refrescando lista de reseñas...");
+                      _resenasFuture = fetchResenas();
+                    });
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class Reviews {
 
     @Id
+    @Column(name = "id_Reseña", updatable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idReseña;
 
@@ -27,6 +28,10 @@ public class Reviews {
     @JoinColumn(name = "id_libro", nullable = false)
     private Libro libro;
 
+    @Column(nullable = false)
+    private int rating;
+
+    
     // Getters y Setters
 
     public Integer getIdReseña() {
@@ -68,4 +73,13 @@ public class Reviews {
     public void setLibro(Libro libro) {
         this.libro = libro;
     }
+    
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
 }
