@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
+import 'package:dio/dio.dart';
+import '../core/dio_client.dart';
 
 class EditarPerfil extends StatefulWidget {
   final int userId;
@@ -19,36 +19,59 @@ class _EditarPerfilState extends State<EditarPerfil> {
 
   Future<void> seleccionarImagen() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    print("🖼️ Abriendo galería para seleccionar imagen...");
+    final pickedFile = await picker.pickImage(
+        source:
+            ImageSource.gallery); //image picker permite acceder a la galeria
 
     if (pickedFile != null) {
+      print("✅ Imagen seleccionada: ${pickedFile.path}");
       setState(() {
         _imagenSeleccionada = File(pickedFile.path);
       });
+    } else {
+      print("❌ No se seleccionó ninguna imagen.");
     }
   }
 
   Future<void> guardarCambios() async {
-    final uri =
-        Uri.parse('http://10.0.2.2:8080/api/usuarios/editar/${widget.userId}');
-    var request = http.MultipartRequest('PUT', uri);
+    try {
+      print("🚀 Iniciando proceso de guardado...");
+      Dio dio = await DioClient.getInstance();
 
-    request.fields['nombre'] = _nombreController.text;
+      String url = 'http://10.0.2.2:8080/api/usuarios/editar/${widget.userId}';
+      print("🔗 Endpoint: $url");
 
-    if (_imagenSeleccionada != null) {
-      request.files.add(await http.MultipartFile.fromPath(
-        'avatarUrl',
-        _imagenSeleccionada!.path,
-      ));
-    }
+      Map<String, dynamic> dataMap = {
+        'nombre': _nombreController.text,
+      };
 
-    final response = await request.send();
+      if (_imagenSeleccionada != null) {
+        print("📤 Preparando imagen para envío: ${_imagenSeleccionada!.path}");
+        dataMap['avatar'] = await MultipartFile.fromFile(
+          _imagenSeleccionada!.path,
+          filename: _imagenSeleccionada!.path.split('/').last,
+        );
+      } else {
+        print("⚠️ No hay imagen nueva seleccionada.");
+      }
 
-    if (response.statusCode == 200) {
-      print('Perfil actualizado');
-      Navigator.pop(context); // volver atrás
-    } else {
-      print('Error: ${response.statusCode}');
+      FormData formData = FormData.fromMap(dataMap);
+
+      final response = await dio.put(
+        url,
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+
+      if (response.statusCode == 200) {
+        print("🎉 Perfil actualizado correctamente.");
+        Navigator.pop(context);
+      } else {
+        print("❌ Error al actualizar: Código ${response.statusCode}");
+      }
+    } catch (e) {
+      print("💥 Excepción al guardar perfil: $e");
     }
   }
 

@@ -4,6 +4,7 @@ import com.example.App_TFG.entidades.Rol;
 import com.example.App_TFG.entidades.Usuario;
 import com.example.App_TFG.repositories.RolRepository;
 import com.example.App_TFG.services.AuthenticationService;
+import com.example.App_TFG.services.ListaLecturaService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +37,10 @@ public class AuthenticationController {
     
     @Autowired
     private  RolRepository rolRepository ;
+    
+    @Autowired
+    private ListaLecturaService listaLecturaService;
+
     
     // Ruta para el login
  // Añadir un HttpOnly y Secure cookie para manejar la sesión
@@ -93,69 +98,52 @@ public class AuthenticationController {
     public ResponseEntity<Map<String, Object>> register(@RequestBody Usuario usuario) {
         Map<String, Object> response = new HashMap<>();
 
-    	try {
-        	System.out.println("Datos recibidos en el controlador: " + usuario);
-        	System.out.println("Datos recibidos en el controlador: email=" + usuario.getEmail() + ", password=" + usuario.getPassword());
-        	
-        	
-        	// planteo ls utilixscion de rdye metodo y di borrarlo, ver funcionmamiento din el .
-//        	 if (usuario.getRoles() != null) {
-//                 for (Rol rol : usuario.getRoles()) {
-//                     if (rol.getIdRol() == null) { // Si el rol no tiene ID, buscarlo por nombre
-//                         Optional<Rol> rolExistente = rolRepository.findByNombre(rol.getNombre());
-//                         if (rolExistente.isPresent()) {
-//                             rol.setIdRol(rolExistente.get().getIdRol()); // Asignar el ID del rol existente
-//                         } else {
-//                             rolRepository.save(rol); // Guardar el rol si no existe
-//                         }
-//                     }
-//                 }
-//             }
-        	 
-        	 if (usuario.getRoles() != null) {
-                 List<Rol> rolesPersistidos = new ArrayList<>();
-                 for (Rol rol : usuario.getRoles()) {
-                     Optional<Rol> rolExistente = rolRepository.findByNombre(rol.getNombre());
-                     if (rolExistente.isPresent()) {
-                         rolesPersistidos.add(rolExistente.get());
-                     } else {
-                         rolRepository.save(rol); // Guardar nuevo rol
-                         rolesPersistidos.add(rol);
-                     }
-                 }
-                 usuario.setRoles(rolesPersistidos); // Asignar roles persistidos al usuario
-             }
-        	 
-        	 
-        	 
-            // Llamar al servicio para manejar el registro
-            authenticationService.register(
+        try {
+            System.out.println("Datos recibidos en el controlador: " + usuario);
+            System.out.println("Datos recibidos en el controlador: email=" + usuario.getEmail() + ", password=" + usuario.getPassword());
+
+            if (usuario.getRoles() != null) {
+                List<Rol> rolesPersistidos = new ArrayList<>();
+                for (Rol rol : usuario.getRoles()) {
+                    Optional<Rol> rolExistente = rolRepository.findByNombre(rol.getNombre());
+                    if (rolExistente.isPresent()) {
+                        rolesPersistidos.add(rolExistente.get());
+                    } else {
+                        rolRepository.save(rol);
+                        rolesPersistidos.add(rol);
+                    }
+                }
+                usuario.setRoles(rolesPersistidos);
+            }
+
+            // Llamar al servicio y obtener el usuario registrado
+            Usuario usuarioRegistrado = authenticationService.register(
                 usuario.getEmail(),
-                usuario.getPassword(), 
+                usuario.getPassword(),
                 usuario.getAvatarUrl(),
                 usuario.getRoles(),
                 usuario.getNombre()
             );
+            listaLecturaService.asegurarListasPredeterminadas(usuarioRegistrado);
 
-            // Responder con éxito
             // Construir respuesta JSON
             response.put("message", "Registro exitoso");
-            response.put("nombre", usuario.getNombre());
-            response.put("email", usuario.getEmail());
-            response.put("role", usuario.getRoles() != null && !usuario.getRoles().isEmpty()
-                    ? usuario.getRoles().get(0).getNombre()
-                    : "User (por defecto)");
-    	
-    	return ResponseEntity.ok(response);
-    } catch (IllegalArgumentException e) {
-        response.put("error", e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    } catch (Exception e) {
-        System.err.println("Error al registrar usuario: " + e);
-        response.put("error", "Error inesperado: " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            response.put("id", usuarioRegistrado.getIdUsuario());
+            response.put("nombre", usuarioRegistrado.getNombre());
+            response.put("email", usuarioRegistrado.getEmail());
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            System.err.println("Error al registrar usuario: " + e);
+            response.put("error", "Error inesperado: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
-    }
+
     
  // Ruta para cerrar sesión (log out)
     @PostMapping("/logout")

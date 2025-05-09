@@ -40,37 +40,32 @@ public class AuthenticationService {
         return Optional.empty(); // Usuario o contraseña incorrectos
     }
   
-    public void register(String email, String contra, String avatarUrl, List<Rol> roles, String nombre) {
+    public Usuario register(String email, String contra, String avatarUrl, List<Rol> roles, String nombre) {
         System.out.println("Parámetros recibidos en el servicio: email=" + email + ", password=" + contra);
 
-        // Verificar si el correo ya está registrado
         Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(email);
         if (usuarioExistente.isPresent()) {
             throw new IllegalArgumentException("El correo electrónico ya está registrado.");
         }
-        
+
         String contraCifrada = passwordEncoder.encode(contra);
 
-        // Crear una nueva instancia de Usuario
-        Usuario nuevoUsuario = new Usuario( nombre,  email,  contraCifrada,  roles,  avatarUrl);
-        nuevoUsuario.setEmail(email);
-        nuevoUsuario.setPassword(contraCifrada);
+        Usuario nuevoUsuario = new Usuario(nombre, email, contraCifrada, roles, avatarUrl);
 
-        // Asignar un avatar por defecto si no se proporciona
         if (avatarUrl == null || avatarUrl.isEmpty()) {
-            avatarUrl = ""; // Valor por defecto
+            avatarUrl = "";
         }
         nuevoUsuario.setAvatarUrl(avatarUrl);
 
-        // Asignar roles por defecto si no se proporcionan
         if (roles == null || roles.isEmpty()) {
             Rol rolDefault = new Rol("User");
             nuevoUsuario.setRoles(List.of(rolDefault));
-        } 
-        System.out.println("Usuario a guardar: " + nuevoUsuario);
-        // Guardar el nuevo usuario en la base de datos
-        usuarioRepository.save(nuevoUsuario);
+        }
+
+        Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
+        return usuarioGuardado;
     }
+
 
 
     // Verificar si el usuario es Admin
