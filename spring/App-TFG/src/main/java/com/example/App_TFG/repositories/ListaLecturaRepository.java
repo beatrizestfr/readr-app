@@ -15,6 +15,12 @@ public interface ListaLecturaRepository extends JpaRepository<ListaLectura, Inte
     // Buscar lista de lectura por nombre y usuario
     Optional<ListaLectura> findByNombreListaAndUsuario(String nombreLista, Usuario usuario);
 
-    // Obtener todas las listas de lectura de un usuario
+    // Obtener todas las listas de lectura de un usuario por sesio 
     List<ListaLectura> findByUsuario(Usuario usuario);
+    //por id 
+    List<ListaLectura> findByUsuarioIdUsuario(Integer idUsuario);
+    
+    Optional<ListaLectura> findByNombreListaAndUsuarioIdUsuario(String nombreLista, Integer idUsuario);
+
+
 }

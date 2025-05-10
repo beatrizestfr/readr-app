@@ -212,5 +212,17 @@ public class ListaLecturaService {
     public Optional<ListaLectura> obtenerListaPorId(Integer idLista) {
         return listaLecturaRepository.findById(idLista);
     }
+    
+    public List<ListaLectura> obtenerListasPorIdUsuario(Integer idUsuario) {
+        return listaLecturaRepository.findByUsuarioIdUsuario(idUsuario);
+    }
+
+    public Optional<List<Libro>> obtenerLibrosLeidosPorUsuarioId(Integer idUsuario) {
+        Optional<ListaLectura> listaRead = listaLecturaRepository.findByNombreListaAndUsuarioIdUsuario("Read", idUsuario);
+
+        return listaRead.map(ListaLectura::getLibros);
+    }
+
+
 
 }

@@ -209,6 +209,28 @@ public class ListaLecturaController {
         return new ResponseEntity<>(listas, HttpStatus.OK);
     }
 
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<List<ListaLectura>> obtenerListasPorIdUsuario(@PathVariable Integer idUsuario) {
+        List<ListaLectura> listas = listaLecturaService.obtenerListasPorIdUsuario(idUsuario);
+
+        if (listas.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(listas, HttpStatus.OK);
+        }
+    }
+
+    @GetMapping("/read/{idUsuario}")
+    public ResponseEntity<List<Libro>> obtenerLibrosLeidosPorUsuarioId(@PathVariable Integer idUsuario) {
+        Optional<List<Libro>> librosLeidos = listaLecturaService.obtenerLibrosLeidosPorUsuarioId(idUsuario);
+
+        if (librosLeidos.isPresent()) {
+            return new ResponseEntity<>(librosLeidos.get(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
 
 
 }
