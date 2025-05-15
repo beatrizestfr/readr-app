@@ -80,6 +80,55 @@ class _ListaLecturaDetallesScreenState
     }
   }
 
+  Future<void> _eliminarLibroDeLista(int idLista, int idLibro) async {
+    final dio = await DioClient.getInstance();
+    final url =
+        'http://10.0.2.2:8080/api/listas-lectura/$idLista/libros/$idLibro';
+
+    try {
+      final response = await dio.delete(url);
+      if (response.statusCode == 204) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Libro eliminado correctamente')),
+        );
+      } else {
+        throw Exception('Error al eliminar el libro');
+      }
+    } catch (e) {
+      print('❌ Error al eliminar el libro: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al eliminar el libro')),
+      );
+    }
+  }
+
+  void _confirmarEliminacion(int idLibro) async {
+    final confirmacion = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("¿Estás seguro?"),
+        content: const Text("¿Quieres eliminar este libro de la lista?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancelar"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmacion == true) {
+      await _eliminarLibroDeLista(widget.idLista, idLibro);
+      setState(() {
+        _librosFuture = fetchLibrosDeLista(widget.idLista);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,14 +176,28 @@ class _ListaLecturaDetallesScreenState
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            image: DecorationImage(
-                              image: NetworkImage(libro.imagenUrl),
-                              fit: BoxFit.cover,
+                        child: Stack(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                image: DecorationImage(
+                                  image: NetworkImage(libro.imagenUrl),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             ),
-                          ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: IconButton(
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () =>
+                                    _confirmarEliminacion(libro.id),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 4),

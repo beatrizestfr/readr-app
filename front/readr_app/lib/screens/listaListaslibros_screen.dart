@@ -108,6 +108,44 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
     ));
   }
 
+  Future<void> _confirmarEliminarLista(int idLista) async {
+    final dio = await DioClient.getInstance();
+
+    final confirmacion = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("¿Estás seguro?"),
+        content: const Text(
+            "¿Quieres eliminar esta lista de lectura? Esta acción no se puede deshacer."),
+        actions: [
+          TextButton(
+            child: const Text("Cancelar"),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          TextButton(
+            child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmacion == true) {
+      try {
+        final response = await dio
+            .delete('http://10.0.2.2:8080/api/listas-lectura/$idLista');
+        if (response.statusCode == 204) {
+          _mostrarError("Lista eliminada correctamente.");
+          _cargarListas();
+        } else {
+          _mostrarError("No se pudo eliminar la lista.");
+        }
+      } catch (e) {
+        _mostrarError("Error al eliminar la lista: $e");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -151,7 +189,21 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
                             );
                             _cargarListas(); // Refrescar al volver
                           },
-                          trailing: const Icon(Icons.arrow_forward_ios),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (!["read", "to read", "reading"]
+                                  .contains(lista.nombreLista.toLowerCase()))
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.black),
+                                  tooltip: 'Eliminar lista',
+                                  onPressed: () =>
+                                      _confirmarEliminarLista(lista.idLista),
+                                ),
+                              const Icon(Icons.arrow_forward_ios),
+                            ],
+                          ),
                         ),
                       );
                     },
