@@ -125,7 +125,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
       final dio = await DioClient.getInstance();
 
       if (dio != null) {
-        // Añadir interceptor de debugging (opcional)
         dio.interceptors.add(InterceptorsWrapper(
           onRequest: (options, handler) {
             print('📤 Request: ${options.uri}');
@@ -306,8 +305,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const listaListaslibros_screen(),
+                                builder: (context) => listaListaslibros_screen(
+                                  idUsuario: idUsuario!,
+                                  esPropio: true,
+                                ),
                               ),
                             );
                           },

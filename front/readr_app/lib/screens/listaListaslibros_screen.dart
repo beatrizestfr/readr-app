@@ -5,7 +5,14 @@ import 'Lista.dart';
 import 'listaLecturaDetalles_screen.dart';
 
 class listaListaslibros_screen extends StatefulWidget {
-  const listaListaslibros_screen({Key? key}) : super(key: key);
+  final int idUsuario;
+  final bool esPropio;
+
+  const listaListaslibros_screen({
+    Key? key,
+    required this.idUsuario,
+    required this.esPropio,
+  }) : super(key: key);
 
   @override
   _ListaListasLibrosScreenState createState() =>
@@ -26,7 +33,8 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
     final dio = await DioClient.getInstance();
 
     try {
-      final response = await dio.get('http://10.0.2.2:8080/api/listas-lectura');
+      final response = await dio.get(
+          'http://10.0.2.2:8080/api/listas-lectura/usuario/${widget.idUsuario}');
 
       if (response.statusCode == 200) {
         final List data = response.data;
@@ -194,13 +202,19 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
                             children: [
                               if (!["read", "to read", "reading"]
                                   .contains(lista.nombreLista.toLowerCase()))
-                                IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.black),
-                                  tooltip: 'Eliminar lista',
-                                  onPressed: () =>
-                                      _confirmarEliminarLista(lista.idLista),
-                                ),
+                                if (widget.esPropio &&
+                                    ![
+                                      "read",
+                                      "to read",
+                                      "reading"
+                                    ].contains(lista.nombreLista.toLowerCase()))
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.black),
+                                    tooltip: 'Eliminar lista',
+                                    onPressed: () =>
+                                        _confirmarEliminarLista(lista.idLista),
+                                  ),
                               const Icon(Icons.arrow_forward_ios),
                             ],
                           ),
@@ -209,12 +223,14 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
                     },
                   ),
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _crearYRedirigir,
-        child: const Icon(Icons.add),
-        tooltip: 'Agregar lista',
-        backgroundColor: Colors.blue,
-      ),
+      floatingActionButton: widget.esPropio
+          ? FloatingActionButton(
+              onPressed: _crearYRedirigir,
+              child: const Icon(Icons.add),
+              tooltip: 'Agregar lista',
+              backgroundColor: const Color.fromARGB(255, 100, 104, 107),
+            )
+          : null,
     );
   }
 }

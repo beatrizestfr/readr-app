@@ -277,8 +277,10 @@ class _PerfilAjenoScreenState extends State<PerfilAjenoScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const listaListaslibros_screen(),
+                              builder: (context) => listaListaslibros_screen(
+                                idUsuario: widget.usuarioP.idUsuario,
+                                esPropio: false,
+                              ),
                             ),
                           );
                         },
