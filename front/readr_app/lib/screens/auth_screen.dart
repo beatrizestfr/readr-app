@@ -19,6 +19,8 @@ class _AuthScreenState extends State<AuthScreen> {
   final String apiUrl = "http://10.0.2.2:8080/auth";
   bool _obscurePassword = true;
 
+  String? loginErrorMessage;
+
   void toggleAuthMode() {
     setState(() {
       isLogin = !isLogin;
@@ -59,12 +61,27 @@ class _AuthScreenState extends State<AuthScreen> {
 
         Navigator.pushReplacementNamed(context, "/home");
       } else {
-        print("⚠️ Error en el login: ${response.statusMessage}");
+        setState(() {
+          loginErrorMessage =
+              "Credenciales incorrectas. Revisa el correo y la contraseña.";
+        });
       }
     } on DioException catch (e) {
-      print("🔥 Error de Dio: ${e.response?.statusCode} - ${e.response?.data}");
+      print("🔥 Dio error: ${e.response?.statusCode} - ${e.response?.data}");
+
+      setState(() {
+        if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+          loginErrorMessage =
+              "Credenciales incorrectas. Revisa el correo y la contraseña.";
+        } else {
+          loginErrorMessage = "Error al iniciar sesión. Inténtalo de nuevo.";
+        }
+      });
     } catch (error) {
       print("💣 Error general: $error");
+      setState(() {
+        loginErrorMessage = "Error desconocido. Inténtalo más tarde.";
+      });
     }
   }
 
@@ -171,10 +188,17 @@ class _AuthScreenState extends State<AuthScreen> {
                                       decoration: const InputDecoration(
                                           labelText: "Correo Electrónico"),
                                       keyboardType: TextInputType.emailAddress,
-                                      validator: (value) =>
-                                          value == null || value.isEmpty
-                                              ? "El correo es obligatorio"
-                                              : null,
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return "El correo es obligatorio";
+                                        }
+                                        final emailRegex = RegExp(
+                                            r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$"); // expresión regular básica
+                                        if (!emailRegex.hasMatch(value)) {
+                                          return "Correo no válido";
+                                        }
+                                        return null;
+                                      },
                                     ),
                                     TextFormField(
                                       controller: passwordController,
@@ -200,6 +224,16 @@ class _AuthScreenState extends State<AuthScreen> {
                                           ? "La contraseña debe tener al menos 6 caracteres"
                                           : null,
                                     ),
+                                    if (isLogin && loginErrorMessage != null)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 8.0),
+                                        child: Text(
+                                          loginErrorMessage!,
+                                          style: const TextStyle(
+                                              color: Colors.red),
+                                        ),
+                                      ),
                                     const SizedBox(height: 20),
                                     ElevatedButton(
                                       onPressed: () {

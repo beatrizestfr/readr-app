@@ -115,7 +115,8 @@ class _ListaLecturaDetallesScreenState
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+            child: const Text("Eliminar",
+                style: TextStyle(color: Color.fromARGB(255, 0, 0, 0))),
           ),
         ],
       ),
