@@ -180,14 +180,14 @@ public class ListaLecturaController {
             @PathVariable Integer idLista,
             HttpSession session) {
 
-        Usuario usuario = (Usuario) session.getAttribute("usuario");
-        if (usuario == null) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
+//        Usuario usuario = (Usuario) session.getAttribute("usuario");
+//        if (usuario == null) {
+//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+//        }
 
         Optional<ListaLectura> listaOpt = listaLecturaService.obtenerListaPorId(idLista);
 
-        if (listaOpt.isPresent() && listaOpt.get().getUsuario().getIdUsuario().equals(usuario.getIdUsuario())) {
+        if (listaOpt.isPresent() ) {
             return new ResponseEntity<>(listaOpt.get().getLibros(), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
