@@ -276,16 +276,16 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     setState(
                         () {}); // Esto fuerza la reconstrucción del widget con los datos nuevos
                   },
-                  child: const Text('Editar perfil'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                  ),
+                  child: const Text(
+                    'Editar perfil',
+                    style: TextStyle(color: Colors.white), // texto blanco
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
-              const LinearProgressIndicator(
-                value: 0.5,
-                backgroundColor: Colors.grey,
-                color: Colors.blue,
-              ),
-              const SizedBox(height: 30),
 
               // LISTAS
               Column(
@@ -342,7 +342,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                   width: 120,
                                   margin: const EdgeInsets.only(right: 10),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue[100],
+                                    color: const Color.fromARGB(
+                                        255, 213, 215, 216),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Center(

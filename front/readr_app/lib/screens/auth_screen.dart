@@ -112,125 +112,149 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      body: Column(
-        children: [
-          const SizedBox(height: 40),
-          Container(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height * 0.3,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("assets/logo2.png"),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(30.0),
-                child: Container(
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isLogin ? "Iniciar Sesión" : "Registro",
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 40),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: MediaQuery.of(context).size.height * 0.3,
+                        decoration: const BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage("assets/logo2.png"),
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        if (!isLogin)
-                          TextFormField(
-                            controller: nameController,
-                            decoration:
-                                const InputDecoration(labelText: "Nombre"),
-                            validator: (value) => value == null || value.isEmpty
-                                ? "El nombre es obligatorio"
-                                : null,
-                          ),
-                        TextFormField(
-                          controller: emailController,
-                          decoration: const InputDecoration(
-                              labelText: "Correo Electrónico"),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) => value == null || value.isEmpty
-                              ? "El correo es obligatorio"
-                              : null,
-                        ),
-                        TextFormField(
-                          controller: passwordController,
-                          decoration: InputDecoration(
-                            labelText: "Contraseña",
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
+                      ),
+                      Expanded(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(30.0),
+                            child: Container(
+                              padding: const EdgeInsets.all(16.0),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.black),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      isLogin ? "Iniciar Sesión" : "Registro",
+                                      style: const TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    if (!isLogin)
+                                      TextFormField(
+                                        controller: nameController,
+                                        decoration: const InputDecoration(
+                                            labelText: "Nombre"),
+                                        validator: (value) =>
+                                            value == null || value.isEmpty
+                                                ? "El nombre es obligatorio"
+                                                : null,
+                                      ),
+                                    TextFormField(
+                                      controller: emailController,
+                                      decoration: const InputDecoration(
+                                          labelText: "Correo Electrónico"),
+                                      keyboardType: TextInputType.emailAddress,
+                                      validator: (value) =>
+                                          value == null || value.isEmpty
+                                              ? "El correo es obligatorio"
+                                              : null,
+                                    ),
+                                    TextFormField(
+                                      controller: passwordController,
+                                      decoration: InputDecoration(
+                                        labelText: "Contraseña",
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscurePassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscurePassword =
+                                                  !_obscurePassword;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      obscureText: _obscurePassword,
+                                      validator: (value) => value == null ||
+                                              value.length < 6
+                                          ? "La contraseña debe tener al menos 6 caracteres"
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        if (_formKey.currentState!.validate()) {
+                                          String email =
+                                              emailController.text.trim();
+                                          String password =
+                                              passwordController.text.trim();
+                                          String name =
+                                              nameController.text.trim();
+                                          if (isLogin) {
+                                            loginUser(email, password, context);
+                                          } else {
+                                            registerUser(
+                                                name, email, password, context);
+                                          }
+                                        }
+                                      },
+                                      child: Text(
+                                        isLogin
+                                            ? "Iniciar Sesión"
+                                            : "Registrarse",
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: toggleAuthMode,
+                                      child: Text(
+                                        isLogin
+                                            ? "¿No tienes cuenta? Regístrate"
+                                            : "¿Ya tienes cuenta? Inicia sesión",
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                          obscureText: _obscurePassword,
-                          validator: (value) => value == null ||
-                                  value.length < 6
-                              ? "La contraseña debe tener al menos 6 caracteres"
-                              : null,
                         ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              String email = emailController.text.trim();
-                              String password = passwordController.text.trim();
-                              String name = nameController.text.trim();
-                              if (isLogin) {
-                                loginUser(email, password, context);
-                              } else {
-                                registerUser(name, email, password, context);
-                              }
-                            }
-                          },
-                          child: Text(
-                            isLogin ? "Iniciar Sesión" : "Registrarse",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: toggleAuthMode,
-                          child: Text(
-                            isLogin
-                                ? "¿No tienes cuenta? Regístrate"
-                                : "¿Ya tienes cuenta? Inicia sesión",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

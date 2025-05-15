@@ -10,7 +10,7 @@ class Usuario {
     required this.nombre,
     required this.email,
     required this.avatarUrl,
-    required this.roles, // Asumimos que roles es una lista de strings
+    required this.roles,
   });
 
   factory Usuario.fromJson(Map<String, dynamic> json) {
@@ -19,8 +19,7 @@ class Usuario {
       nombre: json['nombre'],
       email: json['email'],
       avatarUrl: json['avatarUrl'],
-      roles: List<String>.from(
-          json['roles'] ?? []), // Convertir la lista de roles desde el JSON
+      roles: List<String>.from(json['roles'] ?? []),
     );
   }
 

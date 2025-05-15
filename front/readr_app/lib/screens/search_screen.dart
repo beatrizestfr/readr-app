@@ -18,7 +18,10 @@ class _SearchScreenState extends State<SearchScreen> {
   List<dynamic> _resultados =
       []; // Lista que contendrá tanto usuarios como libros
   bool _isLoading = false;
+  bool _isSearchingUsers =
+      true; // Variable para controlar la búsqueda de usuarios o libros
 
+  // Función para buscar usuarios y libros
   Future<void> buscarUsuariosYLibros() async {
     setState(() {
       _isLoading = true;
@@ -28,29 +31,31 @@ class _SearchScreenState extends State<SearchScreen> {
     final String query = _controller.text;
 
     try {
-      // Buscar usuarios
-      final usuariosResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8080/api/usuarios/nombre/$query'),
-      );
+      if (_isSearchingUsers) {
+        // Buscar usuarios
+        final usuariosResponse = await http.get(
+          Uri.parse('http://10.0.2.2:8080/api/usuarios/nombre/$query'),
+        );
 
-      if (usuariosResponse.statusCode == 200) {
-        Map<String, dynamic> data = jsonDecode(usuariosResponse.body);
-        setState(() {
-          _usuarios = [Usuario.fromJson(data)];
-          _resultados.addAll(_usuarios);
-        });
-      }
+        if (usuariosResponse.statusCode == 200) {
+          Map<String, dynamic> data = jsonDecode(usuariosResponse.body);
+          setState(() {
+            _usuarios = [Usuario.fromJson(data)];
+            _resultados.addAll(_usuarios);
+          });
+        }
+      } else {
+        // Buscar libros
+        final librosResponse = await http.get(
+          Uri.parse('http://10.0.2.2:8080/api/libros/buscar?titulo=$query'),
+        );
 
-      // Buscar libros
-      final librosResponse = await http.get(
-        Uri.parse('http://10.0.2.2:8080/api/libros/buscar?titulo=$query'),
-      );
-
-      if (librosResponse.statusCode == 200) {
-        List<dynamic> librosData = jsonDecode(librosResponse.body);
-        setState(() {
-          _resultados.addAll(librosData);
-        });
+        if (librosResponse.statusCode == 200) {
+          List<dynamic> librosData = jsonDecode(librosResponse.body);
+          setState(() {
+            _resultados.addAll(librosData);
+          });
+        }
       }
 
       setState(() {
@@ -64,11 +69,9 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  // Función para agregar un libro y obtener su ID
+  // Función para agregar un libro
   Future<int?> agregarLibro(String titulo, String autor) async {
     try {
-      print("Intentando agregar libro con título: $titulo, autor: $autor");
-
       final response = await http.post(
         Uri.parse('http://10.0.2.2:8080/api/libros/agregar'),
         headers: {
@@ -80,19 +83,13 @@ class _SearchScreenState extends State<SearchScreen> {
         },
       );
 
-      print("Código de respuesta: ${response.statusCode}");
-      print("Respuesta: ${response.body}");
-
       if (response.statusCode == 201) {
         final int idLibro = int.parse(response.body);
-        print("Libro agregado exitosamente con ID: $idLibro");
         return idLibro;
       } else {
-        print("Error al agregar libro. Código: ${response.statusCode}");
         return null;
       }
     } catch (e) {
-      print("Error en agregarLibro: $e");
       return null;
     }
   }
@@ -100,36 +97,95 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Buscar Usuarios y Libros')),
+      appBar: AppBar(
+        title: const Text(
+          '                        Buscar',
+          textAlign: TextAlign.center,
+        ), // Título centrado
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: 'Buscar por nombre o título de libro',
-                border: OutlineInputBorder(),
-              ),
+            // Pestañas para cambiar entre usuarios y libros
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Botón de "Usuarios"
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isSearchingUsers =
+                          true; // Cambiar a búsqueda de usuarios
+                      _resultados = []; // Limpiar resultados
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isSearchingUsers
+                        ? Colors.black
+                        : Colors.grey[300], // Cambiar color de fondo
+                    foregroundColor: _isSearchingUsers
+                        ? Colors.white
+                        : Colors.black, // Cambiar color de texto
+                  ),
+                  child: const Text('Usuarios'),
+                ),
+                const SizedBox(width: 20),
+                // Botón de "Libros"
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isSearchingUsers = false; // Cambiar a búsqueda de libros
+                      _resultados = []; // Limpiar resultados
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: !_isSearchingUsers
+                        ? Colors.black
+                        : Colors.grey[300], // Cambiar color de fondo
+                    foregroundColor: !_isSearchingUsers
+                        ? Colors.white
+                        : Colors.black, // Cambiar color de texto
+                  ),
+                  child: const Text('Libros'),
+                ),
+              ],
             ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: buscarUsuariosYLibros,
-              child: Text('Buscar'),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: _isSearchingUsers
+                          ? 'Buscar por nombre de usuario'
+                          : 'Buscar por título de libro',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: buscarUsuariosYLibros,
+                ),
+              ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _isLoading
-                ? CircularProgressIndicator()
+                ? const CircularProgressIndicator()
                 : Expanded(
                     child: ListView.builder(
                       itemCount: _resultados.length,
                       itemBuilder: (context, index) {
                         final item = _resultados[index];
-                        if (item is Usuario) {
+                        if (_isSearchingUsers && item is Usuario) {
                           // Mostrar usuario
                           return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage(item.avatarUrl),
+                            ),
                             title: Text(item.nombre),
-                            subtitle: Text(item.email),
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -140,9 +196,34 @@ class _SearchScreenState extends State<SearchScreen> {
                               );
                             },
                           );
-                        } else if (item is Map<String, dynamic>) {
+                        } else if (!_isSearchingUsers &&
+                            item is Map<String, dynamic>) {
                           // Mostrar libro
                           return ListTile(
+                            leading: item['imagenUrl'] != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      item['imagenUrl'],
+                                      width: 50,
+                                      height: 75,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                        if (loadingProgress == null) {
+                                          return child;
+                                        } else {
+                                          return const CircularProgressIndicator();
+                                        }
+                                      },
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Icon(Icons.book);
+                                      },
+                                    ),
+                                  )
+                                : const Icon(Icons
+                                    .book), // Si no hay imagen, mostrar un icono genérico
                             title: Text(item['title'] ?? 'Sin título'),
                             subtitle: Text(
                               item['authors'] is List
@@ -153,7 +234,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             onTap: () async {
                               final String titulo =
                                   item['title'] ?? 'Sin título';
-                              final String autor = (item['authors'] is List)
+                              final String autor = item['authors'] is List
                                   ? (item['authors'] as List).join(', ')
                                   : (item['authors']?.toString() ??
                                       'Sin autor');
@@ -170,7 +251,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 );
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                       content:
                                           Text("No se pudo agregar el libro")),
                                 );

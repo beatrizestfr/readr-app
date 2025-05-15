@@ -13,10 +13,10 @@ public class Usuario {
 
 	 @Id
 	    @GeneratedValue(strategy = GenerationType.IDENTITY)
-	    @Column(name = "id_usuario") // Mapeo correcto del nombre de la columna
+	    @Column(name = "id_usuario") 
 	    private Integer idUsuario;
 
-	    @Column(name = "nombre") // Opcional si los nombres coinciden
+	    @Column(name = "nombre") 
 	    private String nombre;
 
 	    @Column(name = "email", nullable = false, unique = true)
@@ -31,7 +31,6 @@ public class Usuario {
 	    @Column(name = "fecha_registro", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
 	    private LocalDateTime fechaRegistro;
 
-	    // Relación con los roles (ManyToMany)
 	    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	    @JoinTable(
 	        name = "usuario_rol", 
@@ -40,15 +39,13 @@ public class Usuario {
 	    )
 	    private List<Rol> roles;
 
-	    // Relaciones con otras entidades
 	    @OneToMany(fetch = FetchType.EAGER, mappedBy = "usuario")
-	    @JsonManagedReference // evitar serie infi
+	    @JsonManagedReference // evitar serie infinita
 	    private List<ListaLectura> listasLectura;
 
 	    @OneToMany(mappedBy = "usuario")
 	    private List<Reviews> reseñas;
 
-	    // Relaciones de seguimiento
 	    @ManyToMany
 	    @JoinTable(name = "Seguidores", joinColumns = @JoinColumn(name = "id_seguidor"), inverseJoinColumns = @JoinColumn(name = "id_seguido"))
 	    private List<Usuario> siguiendo; // Usuarios a los que este usuario sigue

@@ -20,6 +20,7 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
   String estadoLectura = ""; // Estado inicial
   bool libroFinalizado = false;
   late Future<List<Review>> _resenasFuture;
+  bool mostrarSinopsisCompleta = false;
 
   @override
   void initState() {
@@ -255,11 +256,37 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
                 const SizedBox(height: 12),
 
                 // Sinopsis
-                Text(
-                  libro.sinopsis,
-                  style: const TextStyle(fontSize: 16),
-                  textAlign: TextAlign.justify,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        mostrarSinopsisCompleta || libro.sinopsis.length <= 300
+                            ? libro.sinopsis
+                            : libro.sinopsis.substring(0, 300) + '...',
+                        style: const TextStyle(fontSize: 16),
+                        textAlign: TextAlign.justify,
+                      ),
+                      if (libro.sinopsis.length > 300)
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              mostrarSinopsisCompleta =
+                                  !mostrarSinopsisCompleta;
+                            });
+                          },
+                          child: Text(
+                            mostrarSinopsisCompleta
+                                ? 'Mostrar menos'
+                                : 'Leer más...',
+                            style: const TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
+
                 const SizedBox(height: 20),
 
                 // Botón de progreso de lectura
@@ -270,8 +297,9 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
                         child: Text(
                             libroFinalizado ? 'Read' : obtenerSiguienteLista()),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              libroFinalizado ? Colors.grey : Colors.blue,
+                          backgroundColor: libroFinalizado
+                              ? Colors.grey
+                              : const Color.fromARGB(255, 0, 0, 0),
                           foregroundColor: Colors.white,
                         ),
                       ),
@@ -283,13 +311,18 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
                   onPressed: () {
                     mostrarDialogoResena(context);
                   },
-                  icon: Icon(Icons.add),
-                  label: Text("Añadir review"),
+                  icon: Icon(Icons.add, color: Colors.white),
+                  label: Text(
+                    "Añadir review",
+                    style: TextStyle(color: Colors.white), // texto blanco
+                  ),
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),
-                    backgroundColor: const Color.fromARGB(255, 138, 140, 153),
+                    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
                   ),
                 ),
+
+                SizedBox(height: 20),
                 //lista de reseñas de otros usuarios
                 FutureBuilder<List<Review>>(
                   future: _resenasFuture,
@@ -338,7 +371,9 @@ class _LibroDetalleScreenState extends State<LibroDetalle_screen> {
                                 Text(
                                   "Publicado el ${review.fecha.day}/${review.fecha.month}/${review.fecha.year}",
                                   style: TextStyle(
-                                      fontSize: 12, color: Colors.grey),
+                                      fontSize: 12,
+                                      color:
+                                          const Color.fromARGB(255, 0, 0, 0)),
                                 ),
                               ],
                             ),
