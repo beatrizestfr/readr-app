@@ -159,9 +159,13 @@ public class UsuarioController {
         
 
         if (avatarFile != null && !avatarFile.isEmpty()) {
+            System.out.println("🖼️ Recibida imagen: " + avatarFile.getOriginalFilename());
+
             // Puedes usar un servicio para subir la imagen y guardar la URL
             String url = usuarioService.subirFotoPerfil(avatarFile);
             usuario.setAvatarUrl(url);
+        }else {
+            System.out.println("⚠️ No se recibió imagen.");
         }
 
         usuarioRepository.save(usuario);

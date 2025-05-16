@@ -102,10 +102,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
           // Actualizamos los datos del nombre y avatar
           nombreUsuario =
               usuarioData['nombre'] ?? 'Usuario'; // Cambié a 'nombre'
-          avatarUrl = usuarioData['avatarUrl'] != null &&
-                  usuarioData['avatarUrl'].isNotEmpty
-              ? 'http://10.0.2.2:8080${usuarioData['avatarUrl']}'
-              : "";
+          avatarUrl = usuarioData['avatarUrl'] ?? "";
+          print("🖼️ Avatar final a mostrar: $avatarUrl");
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

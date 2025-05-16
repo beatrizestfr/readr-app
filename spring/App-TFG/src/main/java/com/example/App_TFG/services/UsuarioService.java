@@ -104,6 +104,10 @@ public class UsuarioService {
             //para que no se repita con otros.
             Path ruta = Paths.get("uploads/" + nombreArchivo);
             Files.copy(file.getInputStream(), ruta, StandardCopyOption.REPLACE_EXISTING);
+            
+            System.out.println("📂 Guardando imagen con nombre: " + nombreArchivo);
+            System.out.println("🌐 URL generada: http://10.0.2.2:8080/uploads/" + nombreArchivo);
+
             return "http://10.0.2.2:8080/uploads/" + nombreArchivo;
         } catch (IOException e) {
             throw new RuntimeException("Error al guardar la imagen", e);
