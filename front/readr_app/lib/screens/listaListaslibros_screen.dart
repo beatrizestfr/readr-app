@@ -96,6 +96,7 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
             builder: (context) => ListaLecturaDetallesScreen(
               idLista: nuevaLista.idLista,
               nombreLista: nuevaLista.nombreLista,
+              esPropia: widget.esPropio,
             ),
           ),
         );
@@ -158,7 +159,7 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tus listas'),
+        title: const Text('listas de lectura'),
         centerTitle: true,
       ),
       body: loading
@@ -192,6 +193,7 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
                                     ListaLecturaDetallesScreen(
                                   idLista: lista.idLista,
                                   nombreLista: lista.nombreLista,
+                                  esPropia: widget.esPropio,
                                 ),
                               ),
                             );

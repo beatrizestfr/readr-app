@@ -78,29 +78,47 @@ class _EditarPerfilState extends State<EditarPerfil> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Editar Perfil')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _nombreController,
-              decoration: InputDecoration(labelText: 'Nombre'),
+      appBar: AppBar(
+        title: Text('Editar Perfil'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextField(
+                    controller: _nombreController,
+                    decoration: InputDecoration(labelText: 'Nombre'),
+                  ),
+                  SizedBox(height: 20),
+                  if (_imagenSeleccionada != null)
+                    Image.file(_imagenSeleccionada!, height: 100),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: seleccionarImagen,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('Seleccionar Imagen'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: guardarCambios,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('Guardar'),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(height: 10),
-            _imagenSeleccionada != null
-                ? Image.file(_imagenSeleccionada!, height: 100)
-                : Text("No se ha seleccionado imagen"),
-            ElevatedButton(
-              onPressed: seleccionarImagen,
-              child: Text('Seleccionar Imagen'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: guardarCambios,
-              child: Text('Guardar'),
-            ),
-          ],
+          ),
         ),
       ),
     );

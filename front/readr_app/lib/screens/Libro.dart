@@ -17,7 +17,7 @@ class Libro {
 
   // Método de fábrica para crear un Libro desde un JSON
   factory Libro.fromJson(Map<String, dynamic> json) {
-    print("📘 Parseando Libro: $json");
+    // print("📘 Parseando Libro: $json");
 
     return Libro(
       id: json['idLibro'], // id del libro

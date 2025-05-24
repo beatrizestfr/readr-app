@@ -12,11 +12,13 @@ import 'package:dio/dio.dart';
 class ListaLecturaDetallesScreen extends StatefulWidget {
   final int idLista;
   final String nombreLista;
+  final bool esPropia;
 
   const ListaLecturaDetallesScreen({
     Key? key,
     required this.idLista,
     required this.nombreLista,
+    required this.esPropia,
   }) : super(key: key);
 
   @override
@@ -191,12 +193,15 @@ class _ListaLecturaDetallesScreenState
                             Positioned(
                               top: 4,
                               right: 4,
-                              child: IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () =>
-                                    _confirmarEliminacion(libro.id),
-                              ),
+                              child: widget.esPropia
+                                  ? IconButton(
+                                      icon: const Icon(Icons.delete,
+                                          color: Colors.red),
+                                      onPressed: () =>
+                                          _confirmarEliminacion(libro.id),
+                                    )
+                                  : const SizedBox
+                                      .shrink(), // No muestra nada si no es propia
                             ),
                           ],
                         ),

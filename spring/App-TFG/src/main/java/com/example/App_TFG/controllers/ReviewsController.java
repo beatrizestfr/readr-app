@@ -75,9 +75,10 @@ public class ReviewsController {
 
     // Obtener reseñas por usuario
     @GetMapping("/usuario/{idUsuario}")
-    public List<Reviews> obtenerReseñasPorUsuario(@PathVariable Integer idUsuario) {
-        return reviewsService.obtenerReseñasPorUsuario(idUsuario);
+    public List<ReviewResponseDTO> obtenerReseñasPorUsuario(@PathVariable Integer idUsuario) {
+        return reviewsService.obtenerReseñasDTOPorUsuario(idUsuario);
     }
+
 
     // Eliminar reseña
     @DeleteMapping("/{id}")

@@ -7,11 +7,13 @@ import 'seguidos_screen.dart';
 import 'Lista.dart';
 import 'LibroDetalle_screen.dart';
 import 'Libro.dart';
+import '../models/Review.dart';
 import 'editasP_screen.dart';
 import 'listaListaslibros_screen.dart';
 import '../core/dio_client.dart';
 import 'package:dio/dio.dart';
 import 'listaLecturaDetalles_screen.dart';
+import 'package:intl/intl.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -25,6 +27,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
   int seguidores = 0;
   int seguidos = 0;
   String nombreUsuario = "";
+
+  List<Review> resenas = [];
+  List<bool> expandedList = [];
 
   List<Lista> listas = [];
   List<Libro> libros = [];
@@ -58,8 +63,13 @@ class _PerfilScreenState extends State<PerfilScreen> {
         nombreUsuario = nombre ?? "Usuario";
       });
 
+      print("🧠 ID del usuario cargado: $idUsuario");
+
+      // Carga el resto de los datos
       await cargarDatosPerfil();
       await cargarListasYLibros();
+      await fetchResenasDeUsuario();
+      setState(() {}); // Actualiza la UI después de cargar las reseñas
     } else {
       print("No se encontró el ID del usuario en SharedPreferences.");
     }
@@ -123,23 +133,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
       final dio = await DioClient.getInstance();
 
       if (dio != null) {
-        dio.interceptors.add(InterceptorsWrapper(
-          onRequest: (options, handler) {
-            print('📤 Request: ${options.uri}');
-            print('🧾 Headers: ${options.headers}');
-            return handler.next(options);
-          },
-          onResponse: (response, handler) {
-            print('✅ Response: ${response.statusCode}');
-            print('🍪 Cookies: ${response.headers['set-cookie']}');
-            return handler.next(response);
-          },
-          onError: (e, handler) {
-            print('❌ Error: ${e.response?.statusCode}');
-            return handler.next(e);
-          },
-        ));
-
         // Obtener listas de lectura
         final responseListas = await dio.get(
           'http://10.0.2.2:8080/api/listas-lectura',
@@ -180,6 +173,33 @@ class _PerfilScreenState extends State<PerfilScreen> {
       }
     } catch (e) {
       print("Error al cargar listas/libros: $e");
+    }
+  }
+
+  Future<void> fetchResenasDeUsuario() async {
+    if (idUsuario == null) return;
+    final dio = await DioClient.getInstance();
+    print("🚀 Iniciando la solicitud para obtener las reseñas del usuario...");
+
+    try {
+      final url = 'http://10.0.2.2:8080/api/resenas/usuario/$idUsuario';
+      print("🔄 Realizando la petición GET a la URL: $url");
+
+      final response = await dio.get(url);
+      print("✅ Respuesta recibida: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        setState(() {
+          print("👍 Respuesta 200 OK: Procesando las reseñas...");
+          resenas =
+              (response.data as List).map((r) => Review.fromJson(r)).toList();
+          expandedList = List<bool>.filled(resenas.length, false);
+        });
+      } else {
+        print("❌ Error: Código de estado no 200: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("⚠️ Ocurrió un error al cargar reseñas: $e");
     }
   }
 
@@ -333,6 +353,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                           ListaLecturaDetallesScreen(
                                         idLista: lista.idLista,
                                         nombreLista: lista.nombreLista,
+                                        esPropia: true,
                                       ),
                                     ),
                                   );
@@ -388,6 +409,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                     ListaLecturaDetallesScreen(
                                   idLista: lista.idLista,
                                   nombreLista: lista.nombreLista,
+                                  esPropia: true,
                                 ),
                               ),
                             );
@@ -458,6 +480,110 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   const SizedBox(height: 20),
                 ],
               ),
+              //lista de reseñas
+              resenas.isEmpty
+                  ? const Center(child: Text("Aún no hay reseñas."))
+                  : ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: resenas.length,
+                      itemBuilder: (context, index) {
+                        final review = resenas[index];
+                        final formattedDate =
+                            DateFormat('dd/MM/yyyy').format(review.fecha);
+
+                        // Control de truncado y expandido
+                        final isExpanded = expandedList.length > index
+                            ? expandedList[index]
+                            : false;
+                        final contenido = review.contenido;
+                        final bool shouldTruncate = contenido.length > 200;
+                        final displayText = (!shouldTruncate || isExpanded)
+                            ? contenido
+                            : contenido.substring(0, 200) + '...';
+
+                        return Container(
+                          constraints: const BoxConstraints(minHeight: 180),
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LibroDetalle_screen(
+                                          idLibro: review.idLibro),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: 120,
+                                  height: 180,
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      image:
+                                          NetworkImage(review.imagenLibroUrl),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Puntuación estrellas
+                                    Row(
+                                      children: List.generate(
+                                        5,
+                                        (i) => Icon(
+                                          i < review.rating
+                                              ? Icons.star
+                                              : Icons.star_border,
+                                          color: Colors.amber,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    // Contenido de la reseña (truncado o completo)
+                                    Text(displayText),
+                                    if (shouldTruncate)
+                                      GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            expandedList[index] = !isExpanded;
+                                          });
+                                        },
+                                        child: Text(
+                                          isExpanded
+                                              ? 'Mostrar menos'
+                                              : 'Leer más',
+                                          style: const TextStyle(
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    const SizedBox(height: 8),
+                                    // Fecha publicación
+                                    Text(
+                                      'Publicado el $formattedDate',
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.black54),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
             ],
           ),
         ),

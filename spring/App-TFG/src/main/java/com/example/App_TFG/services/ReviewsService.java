@@ -66,8 +66,11 @@ public class ReviewsService {
     }
 
     // Obtener reseñas por usuario
-    public List<Reviews> obtenerReseñasPorUsuario(Integer idUsuario) {
-        return reviewsRepository.findByUsuario_IdUsuario(idUsuario);
+    public List<ReviewResponseDTO> obtenerReseñasDTOPorUsuario(Integer idUsuario) {
+        List<Reviews> reseñas = reviewsRepository.findByUsuario_IdUsuario(idUsuario);
+        return reseñas.stream()
+                      .map(ReviewResponseDTO::new)
+                      .toList(); 
     }
 
     // Eliminar reseña

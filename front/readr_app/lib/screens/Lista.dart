@@ -16,14 +16,14 @@ class Lista {
 
   // Método de fábrica para crear una Lista desde un JSON
   factory Lista.fromJson(Map<String, dynamic> json) {
-    print("🧩 Parseando Lista: $json");
+    //print("🧩 Parseando Lista: $json");
 
     var librosJson = json['libros'];
     List<Libro> librosList = [];
 
     if (librosJson != null && librosJson is List) {
       librosList = librosJson.map((libroJson) {
-        print("📕 Libro individual JSON: $libroJson");
+        //  print("📕 Libro individual JSON: $libroJson");
         return Libro.fromJson(libroJson);
       }).toList();
     } else {

@@ -65,7 +65,7 @@ public class AuthenticationController {
                 // Crear una cookie de sesión con HttpOnly y Secure activados
                 Cookie cookie = new Cookie("JSESSIONID", session.getId());
                 cookie.setHttpOnly(true);  // Solo accesible desde el servidor
-                cookie.setSecure(true);    // Solo enviada por HTTPS
+               // cookie.setSecure(true);    // Solo enviada por HTTPS
                 cookie.setPath("/");       // Válida para todo el dominio
                 response.addCookie(cookie);
 

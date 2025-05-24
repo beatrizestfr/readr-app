@@ -13,38 +13,50 @@ class DioClient {
     final appDocDir = await getApplicationDocumentsDirectory();
     final cookiePath = Directory('${appDocDir.path}/.cookies');
 
-    // Crea el directorio si no existe
     if (!await cookiePath.exists()) {
       await cookiePath.create(recursive: true);
+      print("📁 Directorio de cookies creado en: ${cookiePath.path}");
     }
 
     final cookieJar = PersistCookieJar(storage: FileStorage(cookiePath.path));
-
     _dio = Dio()..interceptors.add(CookieManager(cookieJar));
 
     _dio!.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        print("Request: ${options.uri}");
-        print("Request Headers: ${options.headers}");
-        return handler.next(options); // Continuar con la solicitud
+        print("📤 Enviando petición:");
+        print("  🔗 URL: ${options.uri}");
+        print("  🧾 Headers: ${options.headers}");
+        if (options.data != null) {
+          print("  📦 Body: ${options.data}");
+        }
+        return handler.next(options);
       },
       onResponse: (response, handler) {
-        print("Response status: ${response.statusCode}");
-        print("Response Headers: ${response.headers}");
+        print("✅ Respuesta recibida:");
+        print("  🔢 Status: ${response.statusCode}");
+        print("  🧾 Headers: ${response.headers}");
         final cookies = response.headers['set-cookie'];
         if (cookies != null) {
           for (var cookie in cookies) {
-            print("Cookie: $cookie");
+            print("🍪 Cookie recibida: $cookie");
           }
         }
-        return handler.next(response); // Continuar con la respuesta
+        return handler.next(response);
       },
       onError: (DioError e, handler) {
-        print("Error: ${e.response?.statusCode}");
-        return handler.next(e); // Continuar con el error
+        print("❌ Error en la petición:");
+        if (e.response != null) {
+          print("  🔢 Status: ${e.response?.statusCode}");
+          print("  🧾 Headers: ${e.response?.headers}");
+          print("  📄 Data: ${e.response?.data}");
+        } else {
+          print("  💥 Error sin respuesta del servidor: ${e.message}");
+        }
+        return handler.next(e);
       },
     ));
 
+    print("⚙️ DioClient inicializado correctamente.");
     return _dio!;
   }
 }

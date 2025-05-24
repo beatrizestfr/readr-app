@@ -4,6 +4,9 @@ import com.example.App_TFG.dto.UsuarioDTO;
 import com.example.App_TFG.entidades.Usuario;
 import com.example.App_TFG.repositories.UsuarioRepository;
 import com.example.App_TFG.services.UsuarioService;
+
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -146,7 +149,8 @@ public class UsuarioController {
     public ResponseEntity<String> editarPerfil(
             @PathVariable Integer id,
             @RequestParam("nombre") String nombre,
-            @RequestParam(value = "avatar", required = false) MultipartFile avatarFile) {
+            @RequestParam(value = "avatar", required = false) MultipartFile avatarFile,
+            HttpSession session) {
 
         Optional<Usuario> usuarioOpt = usuarioRepository.findById(id);
 
@@ -169,6 +173,10 @@ public class UsuarioController {
         }
 
         usuarioRepository.save(usuario);
+        
+        session.setAttribute("usuario", usuario);
+
+        
         return ResponseEntity.ok("Perfil actualizado correctamente");
     }
 
