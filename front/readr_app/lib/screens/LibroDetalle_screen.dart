@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'Libro.dart';
-import 'Lista.dart';
+import '../models/Libro.dart';
+import '../models/Lista.dart';
 import '../core/dio_client.dart';
 import '../models/Review.dart';
 

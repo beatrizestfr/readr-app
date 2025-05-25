@@ -1,4 +1,4 @@
-import 'libro.dart';
+import '../screens/libro.dart';
 import 'usuario.dart';
 
 class Lista {

@@ -24,7 +24,6 @@ class _FeedScreenState extends State<FeedScreen> {
     _fetchReviews();
   }
 
-  // Función para obtener las reseñas desde el API
   Future<void> _fetchReviews() async {
     try {
       final dio = await DioClient.getInstance();
@@ -40,7 +39,6 @@ class _FeedScreenState extends State<FeedScreen> {
           isLoading = false;
         });
       } else {
-        // Manejo de error si la respuesta no es 200
         setState(() {
           isLoading = false;
         });
@@ -69,7 +67,6 @@ class _FeedScreenState extends State<FeedScreen> {
                 final formattedDate =
                     DateFormat('dd/MM/yyyy').format(review.fecha);
 
-                // Asegurarse de que la lista tenga valores iniciales
                 if (expandedList.length < reviews.length) {
                   expandedList.add(false);
                 }

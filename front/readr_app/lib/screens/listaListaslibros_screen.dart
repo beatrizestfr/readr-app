@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../core/dio_client.dart';
-import 'Lista.dart';
+import '../models/Lista.dart';
 import 'listaLecturaDetalles_screen.dart';
 
 class listaListaslibros_screen extends StatefulWidget {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'perfilAjeno_screen.dart';
-import 'usuario.dart';
+import '../models/usuario.dart';
 import 'LibroDetalle_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -15,8 +15,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   TextEditingController _controller = TextEditingController();
   List<Usuario> _usuarios = [];
-  List<dynamic> _resultados =
-      []; // Lista que contendrá tanto usuarios como libros
+  List<dynamic> _resultados = [];
   bool _isLoading = false;
   bool _isSearchingUsers =
       true; // Variable para controlar la búsqueda de usuarios o libros

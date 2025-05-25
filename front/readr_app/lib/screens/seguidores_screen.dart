@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'perfilAjeno_screen.dart';
-import 'usuario.dart';
+import '../models/usuario.dart';
 
 class SeguidoresScreen extends StatefulWidget {
   final int idUsuario;

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'Libro.dart';
+import '../models/Libro.dart';
 import 'SearchLibro_screen.dart';
 
 import 'LibroDetalle_screen.dart';
-import 'Lista.dart';
+import '../models/Lista.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../core/dio_client.dart';
@@ -44,13 +44,10 @@ class _ListaLecturaDetallesScreenState
 
     try {
       final response = await dio.get(url);
-      print('📥 Status code: ${response.statusCode}');
-      print('📥 Data recibido: ${response.data}');
 
       if (response.statusCode == 200) {
         final data = response.data;
 
-        // Si `data` ya es una lista dinámica
         if (data is List) {
           print('📦 JSON parseado: $data');
 

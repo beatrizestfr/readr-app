@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'seguidores_screen.dart';
 import 'seguidos_screen.dart';
-import 'Lista.dart';
+import '../models/Lista.dart';
 import 'LibroDetalle_screen.dart';
-import 'Libro.dart';
+import '../models/Libro.dart';
 import '../models/Review.dart';
 import 'editasP_screen.dart';
 import 'listaListaslibros_screen.dart';
@@ -16,10 +16,13 @@ import 'listaLecturaDetalles_screen.dart';
 import 'package:intl/intl.dart';
 
 class PerfilScreen extends StatefulWidget {
+  //puede cambiar mientras se muestra en la app
   const PerfilScreen({super.key});
 
   @override
-  State<PerfilScreen> createState() => _PerfilScreenState();
+  State<PerfilScreen> createState() =>
+      _PerfilScreenState(); //StatefulWidget necesita
+  // una clase extra para manejar el estado dinámico
 }
 
 class _PerfilScreenState extends State<PerfilScreen> {
@@ -37,7 +40,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   int? idUsuario;
 
   final String baseUrl = 'http://10.0.2.2:8080/api/usuarios';
-  Dio? dio;
+  Dio? dio; // librería para hacer peticiones HTTP
 
   @override
   void initState() {
@@ -49,7 +52,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
   // Método para inicializar Dio
   Future<void> _initializeDio() async {
     dio = await DioClient.getInstance(); // Ahora se obtiene de forma asíncrona
-    // Llama al API o lo que necesites hacer después de que dio esté listo
   }
 
   Future<void> cargarIdUsuario() async {
@@ -59,6 +61,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     if (id != null) {
       setState(() {
+        //avisa a Flutter que ha cambiado algo y necesita redibujar la pantalla
         idUsuario = id;
         nombreUsuario = nombre ?? "Usuario";
       });

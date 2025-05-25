@@ -12,7 +12,9 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool isLogin = true;
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // validar el formulario
+  //Controladores de texto que permiten leer y manipular el texto ingresado
+  //en los campos correspondientes
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController nameController = TextEditingController();

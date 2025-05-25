@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'usuario.dart';
+import '../models/usuario.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'seguidores_screen.dart';
 import 'seguidos_screen.dart';
-import 'Lista.dart';
+import '../models/Lista.dart';
 import 'LibroDetalle_screen.dart';
-import 'Libro.dart';
+import '../models/Libro.dart';
 import 'listaListaslibros_screen.dart';
 import '../core/dio_client.dart';
 import 'package:dio/dio.dart';
@@ -55,8 +55,7 @@ class _PerfilAjenoScreenState extends State<PerfilAjenoScreen> {
   }
 
   Future<void> _initializeDio() async {
-    dio = await DioClient.getInstance(); // Ahora se obtiene de forma asíncrona
-    // Llama al API o lo que necesites hacer después de que dio esté listo
+    dio = await DioClient.getInstance();
   }
 
   Future<void> _obtenerDatosUsuario() async {
@@ -220,7 +219,6 @@ class _PerfilAjenoScreenState extends State<PerfilAjenoScreen> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        // 👈 Añadido aquí
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(

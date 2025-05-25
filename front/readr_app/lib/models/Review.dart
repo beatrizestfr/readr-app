@@ -22,16 +22,6 @@ class Review {
 
   // Método para convertir un JSON a una instancia de Review
   factory Review.fromJson(Map<String, dynamic> json) {
-    // Imprimiendo los valores del JSON para ver cómo se convierten
-    print("Contenido: ${json['contenido']}");
-    print("Rating: ${json['rating']}");
-    print("Nombre Usuario: ${json['nombreUsuario']}");
-    print("Avatar Usuario: ${json['avatarUsuario']}");
-    print("Fecha: ${json['fecha']}");
-    print("ID Libro: ${json['idLibro']}");
-    print("Imagen Libro URL: ${json['imagenLibroUrl']}");
-    print("ID: ${json['id']}");
-
     return Review(
       contenido: json['contenido'],
       rating: json['rating'],

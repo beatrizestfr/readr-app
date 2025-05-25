@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/dio_client.dart';
 import 'package:dio/dio.dart';
-import 'Libro.dart';
-import 'Lista.dart';
+import '../models/Libro.dart';
+import '../models/Lista.dart';
 
 class SearchLibro_screen extends StatefulWidget {
   final int idLista;
