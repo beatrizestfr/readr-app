@@ -147,9 +147,18 @@ public class AuthenticationController {
     
  // Ruta para cerrar sesión (log out)
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
-        request.getSession().invalidate(); // Invalida la sesión actual
-        return ResponseEntity.ok("Log out exitoso");
+    public ResponseEntity<String> logout(HttpSession session, HttpServletResponse response) {
+        // Invalida la sesión actual
+        session.invalidate();
 
+        // Borra la cookie de sesión 
+        Cookie cookie = new Cookie("JSESSIONID", null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(0); // Expira de inmediato
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok("Sesión cerrada correctamente");
     }
+
 }

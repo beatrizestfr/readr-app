@@ -133,6 +133,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
       final dio = await DioClient.getInstance();
 
       if (dio != null) {
+        print("🚀 Iniciando carga de listas y libros...");
+
         // Obtener listas de lectura
         final responseListas = await dio.get(
           'http://10.0.2.2:8080/api/listas-lectura',
@@ -183,10 +185,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
     try {
       final url = 'http://10.0.2.2:8080/api/resenas/usuario/$idUsuario';
-      print("🔄 Realizando la petición GET a la URL: $url");
 
       final response = await dio.get(url);
-      print("✅ Respuesta recibida: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         setState(() {
@@ -203,12 +203,65 @@ class _PerfilScreenState extends State<PerfilScreen> {
     }
   }
 
+  Future<void> logoutUser(BuildContext context) async {
+    final String logoutUrl = "http://10.0.2.2:8080/auth/logout";
+
+    try {
+      final dio = await DioClient.getInstance();
+
+      final response = await dio.post(
+        logoutUrl,
+        options: Options(
+          headers: {"Content-Type": "application/json"},
+        ),
+      );
+
+      print("🚪 Logout status: ${response.statusCode}");
+
+      // Limpia datos locales del usuario
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('userId');
+      await prefs.remove('userName');
+      print("🧹 SharedPreferences limpiado");
+
+      // Redirige al usuario al login (AuthScreen)
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/',
+        (Route<dynamic> route) => false,
+      );
+    } on DioException catch (e) {
+      print(
+          "⚠️ Error al hacer logout: ${e.response?.statusCode} - ${e.response?.data}");
+      // Opcional: Mostrar un diálogo o snackbar de error
+    } catch (e) {
+      print("💥 Excepción inesperada durante logout: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(nombreUsuario.isNotEmpty ? nombreUsuario : 'Perfil'),
         centerTitle: true,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'logout') {
+                await logoutUser(context);
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                const PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Text('Cerrar sesión'),
+                ),
+              ];
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
