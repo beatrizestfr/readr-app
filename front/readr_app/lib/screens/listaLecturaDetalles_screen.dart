@@ -219,18 +219,24 @@ class _ListaLecturaDetallesScreenState
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SearchLibro_screen(idLista: widget.idLista),
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
-        backgroundColor: Theme.of(context).primaryColor,
-      ),
+      floatingActionButton: widget.esPropia
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        SearchLibro_screen(idLista: widget.idLista),
+                  ),
+                );
+              },
+              child: const Icon(
+                Icons.add,
+                color: Colors.white,
+              ),
+              backgroundColor: Colors.black,
+            )
+          : null, // No se muestra ningún botón si no es su perfil
     );
   }
 }

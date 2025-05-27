@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/dio_client.dart';
+import 'home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -20,6 +21,8 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController nameController = TextEditingController();
   final String apiUrl = "http://10.0.2.2:8080/auth";
   bool _obscurePassword = true;
+
+  String? registerErrorMessage;
 
   String? loginErrorMessage;
 
@@ -61,7 +64,13 @@ class _AuthScreenState extends State<AuthScreen> {
         print('💾 ID guardado: ${data['id']}');
         print('💾 Nombre guardado: ${data['nombre']}');
 
-        Navigator.pushReplacementNamed(context, "/home");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const HomeScreen(initialIndex: 2), // 2 es Perfil
+          ),
+        );
       } else {
         setState(() {
           loginErrorMessage =
@@ -105,7 +114,12 @@ class _AuthScreenState extends State<AuthScreen> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         print("✅ Registro exitoso: ${data["message"]} 🎉");
-// Después del registro exitoso:
+
+        // Limpiar mensaje de error anterior
+        setState(() {
+          registerErrorMessage = null;
+        });
+
         await loginUser(email, password, context);
 
         final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -115,15 +129,28 @@ class _AuthScreenState extends State<AuthScreen> {
         print(
             "💾 Usuario registrado con ID: ${data['id']} y nombre: ${data['nombre']}");
 
-        Navigator.pushReplacementNamed(context, "/home");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const HomeScreen(initialIndex: 2), // 2 es Perfil
+          ),
+        );
       } else {
         print("🚫 Error en el registro: ${response.data}");
       }
     } on DioException catch (e) {
       print(
           "🔥 Error de Dio al registrar: ${e.response?.statusCode} - ${e.response?.data}");
+      setState(() {
+        registerErrorMessage =
+            e.response?.data['error'] ?? 'Ocurrió un error inesperado.';
+      });
     } catch (error) {
       print("💥 Error general de conexión: $error");
+      setState(() {
+        registerErrorMessage = 'Error de conexión. Intenta nuevamente.';
+      });
     }
   }
 
@@ -226,6 +253,17 @@ class _AuthScreenState extends State<AuthScreen> {
                                           ? "La contraseña debe tener al menos 6 caracteres"
                                           : null,
                                     ),
+                                    if (!isLogin &&
+                                        registerErrorMessage != null)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(top: 8.0),
+                                        child: Text(
+                                          registerErrorMessage!,
+                                          style: const TextStyle(
+                                              color: Colors.red),
+                                        ),
+                                      ),
                                     if (isLogin && loginErrorMessage != null)
                                       Padding(
                                         padding:

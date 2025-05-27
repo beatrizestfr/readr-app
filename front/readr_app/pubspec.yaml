@@ -26,6 +26,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -35,3 +36,7 @@ flutter:
     - assets/logo2.png
     - assets/default_avatar.png
 
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo2.png"

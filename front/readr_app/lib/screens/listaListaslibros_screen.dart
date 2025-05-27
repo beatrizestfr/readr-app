@@ -228,9 +228,12 @@ class _ListaListasLibrosScreenState extends State<listaListaslibros_screen> {
       floatingActionButton: widget.esPropio
           ? FloatingActionButton(
               onPressed: _crearYRedirigir,
-              child: const Icon(Icons.add),
+              child: const Icon(
+                Icons.add,
+                color: Colors.white, // Ícono blanco
+              ),
               tooltip: 'Agregar lista',
-              backgroundColor: const Color.fromARGB(255, 100, 104, 107),
+              backgroundColor: Colors.black, // Fondo negro
             )
           : null,
     );
