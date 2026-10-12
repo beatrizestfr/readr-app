@@ -1,0 +1,19 @@
+# --- Secrets and local configuration ---
+.env
+.env.*
+!.env.example
+application-local.properties
+
+# --- Runtime data: profile pictures uploaded through the app ---
+spring/App-TFG/uploads/*
+!spring/App-TFG/uploads/.gitkeep
+
+# --- IDE and OS files ---
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
